@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=1 python qlora.py \
+python llamaft.py \
     --model_name_or_path meta-llama/Llama-2-7b-hf \
     --use_auth \
     --use_auth_token \
@@ -19,14 +19,7 @@ CUDA_VISIBLE_DEVICES=1 python qlora.py \
     --remove_unused_columns False \
     --do_train \
     --do_eval false \
-    --do_mmlu_eval \
-    --lora_r 64 \
-    --lora_alpha 16 \
-    --lora_modules all \
-    --double_quant \
-    --quant_type nf4 \
     --fp16 \
-    --bits 4 \
     --warmup_ratio 0.03 \
     --lr_scheduler_type constant \
     --gradient_checkpointing \
@@ -40,9 +33,7 @@ CUDA_VISIBLE_DEVICES=1 python qlora.py \
     --learning_rate 0.0002 \
     --adam_beta2 0.999 \
     --max_grad_norm 0.3 \
-    --lora_dropout 0.1 \
     --weight_decay 0.0 \
-    --seed 0 \
+    --seed 7 \
     --sortby random \
     --num_layers 15 \
-    --full_finetune true
