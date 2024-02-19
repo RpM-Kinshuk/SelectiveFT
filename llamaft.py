@@ -147,7 +147,7 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
         metadata={"help": "Finetune the entire model without adapters."}
     )
     max_memory_MB: int = field(
-        default=80000,
+        default=12000,
         metadata={"help": "Free memory per gpu."}
     )
     report_to: str = field(
@@ -205,24 +205,33 @@ class GenerationArguments:
     length_penalty: Optional[float] = field(default=1.0)
     no_repeat_ngram_size: Optional[int] = field(default=0)
 
-parser = argparse.ArgumentParser(description="Llama 2 Fine-Tuning")
-# Parser Arguments and Defaults
-
-args = parser.parse_args()
-
-# Memory Log Path
-mempath = (
-    f"/rscratch/tpang/kinshuk/RpMKin/llama_ft/alpaca/trainseed_{args.seed}"
-    + f"/{args.sortby}"
-)
 
 os.environ["TRANSFORMERS_CACHE"] = "/rscratch/tpang/kinshuk/cache"
 os.environ["HF_DATASETS_CACHE"]="/rscratch/tpang/kinshuk/cache"
 
 def main():
+    hfparser = transformers.HfArgumentParser((
+        ModelArguments, DataArguments, TrainingArguments, GenerationArguments
+    )) # type: ignore
+    
+    model_args, data_args, training_args, generation_args, extra_args = \
+        hfparser.parse_args_into_dataclasses(return_remaining_strings=True)
+    
+    training_args.generation_config = transformers.GenerationConfig(**vars(generation_args))
+    args = argparse.Namespace(
+        **vars(model_args), **vars(data_args), **vars(training_args)
+    )
+    print(args)
+    
     os.environ["TRANSFORMERS_CACHE"] = args.cache_dir
     cuda_device = torch.cuda.current_device()
 
+    # Memory Log Path
+    mempath = (
+        f"/rscratch/tpang/kinshuk/RpMKin/llama_ft/alpaca/"
+        + f"trainseed_{args.seed}/{args.sortby}"
+    )
+    
     # Control randomness
     random.seed(args.seed)
     np.random.seed(args.seed)
