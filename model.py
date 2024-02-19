@@ -106,7 +106,14 @@ def get_model(args):
     if args.freeze:
         for param in model.parameters():
             param.requires_grad = False
-        return tokenizer, model
+        for name, module in model.named_modules():
+            if 'norm' in name:
+                module = module.to(torch.float32)
+            if 'lm_head' in name or 'embed_tokens' in name:
+                if hasattr(module, 'weight'):
+                    if args.bf16 and module.weight.dtype == torch.float32:
+                        module = module.to(torch.bfloat16) 
+        return model, tokenizer
     
     # if "lora" not in args.sortby.lower():
     #     # Save WeightWatcher Metrics
@@ -162,6 +169,14 @@ def get_model(args):
                 if args.verbose:
                     print(f"Enabling {name} parameter")
                 param.requires_grad = True
+    
+    for name, module in model.named_modules():
+        if 'norm' in name:
+            module = module.to(torch.float32)
+        if 'lm_head' in name or 'embed_tokens' in name:
+            if hasattr(module, 'weight'):
+                if args.bf16 and module.weight.dtype == torch.float32:
+                    module = module.to(torch.bfloat16) 
     
     return model, tokenizer
 
