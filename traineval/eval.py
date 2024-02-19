@@ -8,3 +8,4 @@ def eval_func(args, logger, trainer, all_metrics):
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
         all_metrics.update(metrics)
+    return all_metrics

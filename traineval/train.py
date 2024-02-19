@@ -9,3 +9,4 @@ def train_func(args, logger, trainer, all_metrics):
         trainer.save_metrics("train", metrics)
         trainer.save_state()
         all_metrics.update(metrics)
+    return all_metrics
