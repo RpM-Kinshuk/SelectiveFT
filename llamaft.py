@@ -53,10 +53,6 @@ class ModelArguments:
         default=False,
         metadata={"help": "To use Huggingface auth token from Git Credentials."}
     )
-    seed: Optional[int] = field(
-        default=7,
-        metadata={"help": "Random seed for reproducibility."}
-    )
 
 @dataclass
 class DataArguments:
@@ -94,6 +90,10 @@ class DataArguments:
 
 @dataclass
 class TrainingArguments(transformers.Seq2SeqTrainingArguments):
+    seed: Optional[int] = field(
+        default=7,
+        metadata={"help": "Random seed for reproducibility."}
+    )
     cache_dir: Optional[str] = field(
         default='/rscratch/tpang/kinshuk/cache',
     )
