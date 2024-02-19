@@ -1,13 +1,16 @@
-from ast import parse
+from model import get_model
+from loader.data_module import make_data_module
+from loader.callbacks import mmlu_callback
+from traineval.eval import eval_func
+from traineval.train import train_func
 import os
-import transformers
-from os.path import exists, join, isdir
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Sequence
+import json
 import torch
 import random
+import logging
 import argparse
 import numpy as np
+import transformers
 from pathlib import Path
 # import accelerate.utils
 import torch.backends.mps
@@ -19,9 +22,14 @@ from torch.cuda import (
     memory_allocated,
 )
 from loader.logger import get_logger
-from transformers import set_seed
+from transformers import ( 
+    set_seed,
+    Seq2SeqTrainer,
+)
 # from accelerate import Accelerator
-from distutils.util import strtobool
+from os.path import exists, join, isdir
+from dataclasses import dataclass, field
+from typing import Optional, Dict, Sequence
 
 from transformers.utils.logging import (
     set_verbosity_error as transformers_vb_err,
@@ -30,8 +38,7 @@ from datasets.utils.logging import (
     set_verbosity_error as datasets_vb_err,
 )
 
-IGNORE_INDEX = -100
-DEFAULT_PAD_TOKEN = "[PAD]"
+logger = logging.getLogger(__name__)
 
 @dataclass
 class ModelArguments:
@@ -210,6 +217,7 @@ os.environ["TRANSFORMERS_CACHE"] = "/rscratch/tpang/kinshuk/cache"
 os.environ["HF_DATASETS_CACHE"]="/rscratch/tpang/kinshuk/cache"
 
 def main():
+    global logger
     hfparser = transformers.HfArgumentParser((
         ModelArguments, DataArguments, TrainingArguments, GenerationArguments
     )) # type: ignore
@@ -222,7 +230,6 @@ def main():
         **vars(model_args), **vars(data_args), **vars(training_args)
     )
     print(args)
-    
     os.environ["TRANSFORMERS_CACHE"] = args.cache_dir
     cuda_device = torch.cuda.current_device()
 
@@ -250,8 +257,8 @@ def main():
     if args.verbose:
         print("SEED:", args.seed)
         task_info = (
-            f"\n\n\nTask to finetune: {args.task_name}\n\n\n"
-            + f"alpha Decreasing: {not args.alpha_ascending}\n\n\n"
+            f"\n\n\nDataset to finetune on: {args.dataset}\n\n\n"
+            + f"alpha Decreasing: {not args.sort_ascending}\n\n\n"
             + f"Layers to train: {args.num_layers}\n\n\n"
             + f"Train randomly: {'random' in args.sortby.lower()}\n\n\n"
         )
@@ -262,67 +269,48 @@ def main():
         global _tqdm_active
         _tqdm_active = False
 
-    device = None
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-    elif torch.backends.mps.is_available():
-        device = torch.device("mps")
-    else:
-        device = torch.device("cpu")
-    # if args.accelerate:
-    #     device = accelerator.device
+    # WIP >>>------------------------------------------>
 
-    # Get Model, Data, Optimizer
-    model, train_dataloader, eval_dataloader = get_model_data(args, cache_dir)
-    model.to(device)  # type: ignore
-    optimizer = getOptim(args, model, vary_lyre=False, factor=1)
+    model, tokenizer = get_model(args)
 
-    if args.verbose:
-        print(f"Training data size: {len(train_dataloader)}")
-        print(f"Validation data size: {len(eval_dataloader)}")
+    data_module = make_data_module(tokenizer=tokenizer, args=args) # type: ignore
 
-    # Accelerator
-    # if args.accelerate:
-    #     model, optimizer, train_dataloader, eval_dataloader = accelerator.prepare(
-    #         model, optimizer, train_dataloader, eval_dataloader
-    #     )
-
-    # Get Initial Validation Loss
-    i_val_loss, i_val_acc = calc_val_loss(args, model, eval_dataloader, device)
-    if args.verbose:
-        print(
-            f"\nEpoch 0/{args.epochs}"
-            + f"|Val Loss: {i_val_loss:.2f} "
-            + f"|Val Acc: {i_val_acc:.2f}"
-        )
-
-    # Train and get Losses
-    train_loss, val_loss, val_acc = calc_train_loss(
-        args=args,
+    trainer = Seq2SeqTrainer(
         model=model,
-        optimizer=optimizer,
-        device=device,
-        train_dataloader=train_dataloader,
-        eval_dataloader=eval_dataloader,
+        tokenizer=tokenizer,
+        args=training_args,
+        **{k:v for k,v in data_module.items() if k != 'predict_dataset'},
     )
 
-    val_loss = [i_val_loss] + val_loss
-    val_acc = [i_val_acc] + val_acc
-    base = {
-        "train_loss_base": train_loss,
-        "val_loss_base": val_loss,
-        "val_acc_base": val_acc,
-    }
+    if args.do_mmlu_eval:
+        trainer = mmlu_callback(args, tokenizer, trainer)
+
+    all_metrics = {"run_name": args.run_name}
+
+    # Train
+    if args.do_train:
+        train_func(args, logger, trainer, all_metrics)
+    
+    # Eval
+    if args.do_eval:
+        eval_func(args, logger, trainer, all_metrics)
+
+    end_memory = memory_allocated(device=cuda_device)
+    peek_memory = max_memory_allocated(device=cuda_device)
+    print(
+        f"\n\n\nMemory usage before: {start_memory} bytes\nMemory usage after: {int((end_memory/1024)/1024)}MB"
+    )
+    print(f"\nPeak Memory usage: {int((peek_memory/1024)/1024)}MB\n\n\n")
+
+    # WIP <-----------------------------------------<<<
 
     if args.memlog: # Memory Logging
         log_info = (
-            f"\n\n{args.task_name} "
+            f"\n\n{args.dataset} "
             + f"{args.num_layers} Layers "
             + f"{args.sortby} "
             + f"ascending {args.alpha_ascending}"
         )
-        end_memory = memory_allocated(device=cuda_device)
-        peek_memory = max_memory_allocated(device=cuda_device)
         Path(mempath).mkdir(parents=True, exist_ok=True)
         logger = get_logger(mempath, "memlog.log")
         logger.info(log_info)
@@ -332,17 +320,9 @@ def main():
         )
         logger.info(f"\nPeak Memory usage: {(peek_memory/1024)/1024}MB\n\n")
 
-    if args.debug and args.verbose:
-        print("\n--> Debug Mode <--")
-        print("\nTrain Loss:")
-        print(*[train_loss[i] for i in range(0, len(train_loss), args.batch_size)])
-        print("\nVal Loss:\n", val_loss)
-        print("\nVal Acc:\n", val_acc)
-    else:
-        # Save the data
-        Path(args.savepath).mkdir(parents=True, exist_ok=True)
-        np.save(os.path.join(args.savepath, "baseline.npy"), base)  # type: ignore
-
+    if (args.do_train or args.do_eval or args.do_predict):
+        with open(os.path.join(args.output_dir, "metrics.json"), "w") as fout:
+            fout.write(json.dumps(all_metrics))
 
 if __name__ == "__main__":
     main()
