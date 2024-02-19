@@ -1,8 +1,10 @@
+#TODO: Handle extra args and save metrics systematically
+
 from model import get_model
-from loader.data_module import make_data_module
-from loader.callbacks import mmlu_callback
 from traineval.eval import eval_func
 from traineval.train import train_func
+from loader.callbacks import mmlu_callback
+from loader.data_module import make_data_module
 import os
 import json
 import torch
@@ -101,16 +103,12 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
         default=True,
         metadata={"help": "Whether to print verbose output."}
     )
-    debug: Optional[bool] = field(
-        default=True,
-        metadata={"help": "Debugging mode for program."}
-    )
     memlog: Optional[bool] = field(
         default=False,
         metadata={"help": "Whether to log memory usage."}
     )
     freeze: Optional[bool] = field(
-        default=True,
+        default=False,
         metadata={"help": "Whether to freeze the model."}
     )
     sortby: str = field(
@@ -124,6 +122,10 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
     sort_ascending: bool = field(
         default=False,
         metadata={"help": "Whether to train in ascending order of layer sorting method."}
+    )
+    add_layer_norm: bool = field(
+        default=False,
+        metadata={"help": "Whether to add layer norm to the layers being trained."}
     )
     train_on_source: Optional[bool] = field(
         default=False,
@@ -289,11 +291,11 @@ def main():
 
     # Train
     if args.do_train:
-        train_func(args, logger, trainer, all_metrics)
+        all_metrics = train_func(args, logger, trainer, all_metrics)
     
     # Eval
     if args.do_eval:
-        eval_func(args, logger, trainer, all_metrics)
+        all_metrics = eval_func(args, logger, trainer, all_metrics)
 
     end_memory = memory_allocated(device=cuda_device)
     peek_memory = max_memory_allocated(device=cuda_device)
