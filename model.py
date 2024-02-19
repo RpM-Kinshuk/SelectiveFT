@@ -1,28 +1,106 @@
-import torch
-import pandas as pd
-from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
-from tqdm import tqdm, trange
-import io
-import numpy as np
-import matplotlib.pyplot as plt
 import os
+import io
+import torch
+import random
+import numpy as np
+import pandas as pd
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
-    BitsAndBytesConfig,
-    HfArgumentParser,
-    TrainingArguments,
+    LlamaTokenizer,
+    PreTrainedModel,
+    PreTrainedTokenizer,
     pipeline,
     logging,
 )
 import weightwatcher as ww
-import random
+from typing import Dict
 
+IGNORE_INDEX = -100
+DEFAULT_PAD_TOKEN = "[PAD]"
+
+def smart_tokenizer_and_embedding_resize(
+    special_tokens_dict: Dict,
+    tokenizer: PreTrainedTokenizer,
+    model: PreTrainedModel,
+):
+    """Borrowed from qlora codebase
+    Resize tokenizer and embedding.
+
+    Note: This is the unoptimized version that may make embedding size not be divisible by 64.
+    """
+    num_new_tokens = tokenizer.add_special_tokens(special_tokens_dict)
+    model.resize_token_embeddings(len(tokenizer))
+    
+    if num_new_tokens > 0:
+        input_embeddings_data = model.get_input_embeddings().weight.data
+        output_embeddings_data = model.get_output_embeddings().weight.data
+
+        input_embeddings_avg = input_embeddings_data[:-num_new_tokens].mean( # type: ignore
+            dim=0, keepdim=True)
+        output_embeddings_avg = output_embeddings_data[:-num_new_tokens].mean( # type: ignore
+            dim=0, keepdim=True)
+
+        input_embeddings_data[-num_new_tokens:] = input_embeddings_avg # type: ignore
+        output_embeddings_data[-num_new_tokens:] = output_embeddings_avg # type: ignore
 
 def get_model(args):
+
+    if torch.cuda.is_available():
+        n_gpus = torch.cuda.device_count()
+    
+    max_memory = f'{args.max_memory_MB}MB'
+    max_memory = {i: max_memory for i in range(n_gpus)}
+    device_map = "auto"
+
+    if os.environ.get('LOCAL_RANK') is not None:
+        local_rank = int(os.environ.get('LOCAL_RANK', '0'))
+        device_map = {'': local_rank}
+        max_memory = {'': max_memory[local_rank]}
+
     model = AutoModelForCausalLM.from_pretrained(
-        "meta-llama/Llama-2-7b-hf", token="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"
+        args.model_name_or_path, 
+        token="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",
+        device_map=device_map,
+        max_memory=max_memory,
     )
+
+    setattr(model, 'model_parallel', True)
+    setattr(model, 'is_parallelizable', True)
+
+    # Tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        args.model_name_or_path,
+        cache_dir=args.cache_dir,
+        padding_side="right",
+        use_fast=False, # Fast tokenizer giving issues.
+        tokenizer_type='llama' if 'llama' in args.model_name_or_path else None, # Needed for HF name change
+        trust_remote_code=args.trust_remote_code,
+        use_auth_token=args.use_auth_token,
+    )
+    if tokenizer._pad_token is None:
+        smart_tokenizer_and_embedding_resize(
+            special_tokens_dict=dict(pad_token=DEFAULT_PAD_TOKEN),
+            tokenizer=tokenizer, # type: ignore
+            model=model,
+        )
+    if 'llama' in args.model_name_or_path or isinstance(tokenizer, LlamaTokenizer):
+        # LLaMA tokenizer may not have correct special tokens set.
+        # Check and add them if missing to prevent them from being parsed into different tokens.
+        # Note that these are present in the vocabulary.
+        # Note also that `model.config.pad_token_id` is 0 which corresponds to `<unk>` token.
+        print('Adding special tokens.')
+        tokenizer.add_special_tokens({
+                "eos_token": tokenizer.convert_ids_to_tokens(model.config.eos_token_id),
+                "bos_token": tokenizer.convert_ids_to_tokens(model.config.bos_token_id),
+                "unk_token": tokenizer.convert_ids_to_tokens(
+                    model.config.pad_token_id
+                    if model.config.pad_token_id != -1
+                    else tokenizer.pad_token_id # type: ignore
+                ),
+        })
+
+    # SELECTIVE FINETUNING >>>------------------------------------->
 
     if args.freeze:
         for param in model.parameters():
@@ -84,7 +162,7 @@ def get_model(args):
                     print(f"Enabling {name} parameter")
                 param.requires_grad = True
     
-    return model
+    return model, tokenizer
 
     # Randomly select layers to train without ww metrics
     param_optimizer = list(model.named_parameters())
