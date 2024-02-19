@@ -65,6 +65,7 @@ def get_model(args):
         max_memory=max_memory,
     )
 
+    model.config.use_cache = False
     setattr(model, 'model_parallel', True)
     setattr(model, 'is_parallelizable', True)
 
