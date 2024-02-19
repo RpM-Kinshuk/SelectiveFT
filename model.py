@@ -71,12 +71,13 @@ def get_model(args):
     # Tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
         args.model_name_or_path,
+        token="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",
         cache_dir=args.cache_dir,
         padding_side="right",
         use_fast=False, # Fast tokenizer giving issues.
         tokenizer_type='llama' if 'llama' in args.model_name_or_path else None, # Needed for HF name change
         trust_remote_code=args.trust_remote_code,
-        use_auth_token=args.use_auth_token,
+        # use_auth_token=args.use_auth_token,
     )
     if tokenizer._pad_token is None:
         smart_tokenizer_and_embedding_resize(
@@ -105,7 +106,7 @@ def get_model(args):
     if args.freeze:
         for param in model.parameters():
             param.requires_grad = False
-        return model
+        return tokenizer, model
     
     # if "lora" not in args.sortby.lower():
     #     # Save WeightWatcher Metrics
