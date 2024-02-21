@@ -235,10 +235,18 @@ def main():
     os.environ["TRANSFORMERS_CACHE"] = args.cache_dir
     cuda_device = torch.cuda.current_device()
 
+    sby = args.sortby
+    if "alpha" in (args.sortby).lower():
+        sby = "alpha"
+    elif "layer" in (args.sortby).lower():
+        sby = "layer"
+    else:
+        sby = "rand"
+
     # Memory Log Path
     mempath = (
-        f"/rscratch/tpang/kinshuk/RpMKin/llama_ft/alpaca/"
-        + f"trainseed_{args.seed}/{args.sortby}"
+        f"/rscratch/tpang/kinshuk/RpMKin/llama_ft/{args.dataset}/"
+        + f"trainseed_{args.seed}/{sby}"
     )
     
     # Control randomness
@@ -257,12 +265,12 @@ def main():
     start_memory = memory_allocated(device=cuda_device)
 
     if args.verbose:
-        print("SEED:", args.seed)
         task_info = (
-            f"\n\n\nDataset to finetune on: {args.dataset}\n\n\n"
-            + f"alpha Decreasing: {not args.sort_ascending}\n\n\n"
+            f"\n\n\nSeed: {args.seed}\n\n"
+            + f"Dataset: {args.dataset}\n\n"
+            + f"Sort by: {args.sortby}\n\n"
+            + f"Sort Descending: {not args.sort_ascending}\n\n"
             + f"Layers to train: {args.num_layers}\n\n\n"
-            + f"Train randomly: {'random' in args.sortby.lower()}\n\n\n"
         )
         print(task_info)
     else:
@@ -311,7 +319,7 @@ def main():
             f"\n\n{args.dataset} "
             + f"{args.num_layers} Layers "
             + f"{args.sortby} "
-            + f"ascending {args.alpha_ascending}"
+            + f"Ascending {args.sort_ascending}"
         )
         Path(mempath).mkdir(parents=True, exist_ok=True)
         logger = get_logger(mempath, "memlog.log")
@@ -323,7 +331,15 @@ def main():
         logger.info(f"\nPeak Memory usage: {(peek_memory/1024)/1024}MB\n\n")
 
     if (args.do_train or args.do_eval or args.do_predict):
-        with open(os.path.join(args.output_dir, "metrics.json"), "w") as fout:
+        metrics_file_path = os.path.join(args.output_dir,
+                                    f'trainseed_{args.seed}',
+                                    args.dataset,
+                                    f"{sby}_asc_{args.sort_ascending}",
+                                    f"layers_{args.num_layers}",
+                                    "metrics.json")
+
+        os.makedirs(os.path.dirname(metrics_file_path), exist_ok=True)
+        with open(metrics_file_path, "w") as fout:
             fout.write(json.dumps(all_metrics))
 
 if __name__ == "__main__":
