@@ -37,3 +37,4 @@ python llamaft.py \
     --seed 7 \
     --sortby random \
     --num_layers 15 \
+    --cache_dir /rscratch/tpang/kinshuk/cache \
