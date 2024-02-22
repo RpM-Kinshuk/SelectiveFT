@@ -108,7 +108,7 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
         metadata={"help": "Whether to log memory usage."}
     )
     freeze: Optional[bool] = field(
-        default=False,
+        default=True,
         metadata={"help": "Whether to freeze the model."}
     )
     sortby: str = field(
@@ -313,10 +313,10 @@ def main():
         end_memory[device] = memory_allocated(device=device)
         peek_memory += max_memory_allocated(device=device)
     print(
-        f"\n\n\nMemory usage before: {sum(start_memory)/1e6} MB\n"\
-        +f"Memory usage after: {sum(end_memory)/1e6} MB"
+        f"\n\n\nMemory usage before: {int(sum(start_memory)/1e6)} MB\n"\
+        +f"Memory usage after: {int(sum(end_memory)/1e6)} MB"
     )
-    print(f"\nPeak Memory usage: {peek_memory/1e6} MB\n\n\n")
+    print(f"\nPeak Memory usage: {int(peek_memory/1e6)} MB\n\n\n")
 
     # WIP <-----------------------------------------<<<
 
@@ -331,10 +331,10 @@ def main():
         logger = get_logger(mempath, "memlog.log")
         logger.info(log_info)
         logger.info(
-            f"\nMemory usage before: {sum(start_memory)/1e6} MB\n"
-            + f"Memory usage after: {sum(end_memory)/1e6} MB"
+            f"\nMemory usage before: {int(sum(start_memory)/1e6)} MB\n"
+            + f"Memory usage after: {int(sum(end_memory)/1e6)} MB"
         )
-        logger.info(f"\nPeak Memory usage: {peek_memory/1e6} MB\n\n")
+        logger.info(f"\nPeak Memory usage: {int(peek_memory/1e6)} MB\n\n")
 
     if (args.do_train or args.do_eval or args.do_predict):
         metrics_file_path = os.path.join(args.output_dir,
