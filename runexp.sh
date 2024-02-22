@@ -4,7 +4,6 @@ python llamaft.py \
     --data_seed 42 \
     --evaluation_strategy steps \
     --max_eval_samples 50 \
-    --per_device_eval_batch_size 1 \
     --dataloader_num_workers 1 \
     --logging_strategy steps \
     --do_eval false \
@@ -15,4 +14,3 @@ python llamaft.py \
     --seed 7 \
     --sortby random \
     --num_layers 15 \
-    --cache_dir /rscratch/tpang/kinshuk/cache \
