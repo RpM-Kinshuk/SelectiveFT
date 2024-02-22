@@ -1,5 +1,5 @@
 python llamaft.py \
-    --output_dir ./output \
+    --output_dir /rscratch/tpang/kinshuk/RpMKin/llama_ft/data \
     --logging_steps 10 \
     --data_seed 42 \
     --evaluation_strategy steps \
