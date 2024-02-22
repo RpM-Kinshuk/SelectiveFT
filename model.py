@@ -102,18 +102,24 @@ def get_model(args):
                 ),
         })
 
+    for name, module in model.named_modules():
+        if 'norm' in name:
+            module = module.to(torch.float32)
+        if 'lm_head' in name or 'embed_tokens' in name:
+            if hasattr(module, 'weight'):
+                if args.bf16 and module.weight.dtype == torch.float32:
+                    module = module.to(torch.bfloat16) 
+    
     # SELECTIVE FINETUNING >>>------------------------------------->
 
     if args.freeze:
-        for param in model.parameters():
+        for name, param in model.parameters():
             param.requires_grad = False
-        for name, module in model.named_modules():
-            if 'norm' in name:
-                module = module.to(torch.float32)
-            if 'lm_head' in name or 'embed_tokens' in name:
-                if hasattr(module, 'weight'):
-                    if args.bf16 and module.weight.dtype == torch.float32:
-                        module = module.to(torch.bfloat16) 
+            if "lm_head" in name:
+                param.requires_grad = True
+    else:
+        for name, param in model.named_parameters():  # type: ignore
+            param.requires_grad = True
         return model, tokenizer
     
     # if "lora" not in args.sortby.lower():
