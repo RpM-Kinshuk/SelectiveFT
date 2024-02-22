@@ -234,7 +234,7 @@ def main():
     print(args)
     os.environ["TRANSFORMERS_CACHE"] = args.cache_dir
     cuda_device = torch.cuda.current_device()
-
+    gpus = torch.cuda.device_count()
     sby = args.sortby
     if "alpha" in (args.sortby).lower():
         sby = "alpha"
@@ -258,11 +258,15 @@ def main():
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
     set_seed(args.seed)  # transformers seed
-
+    
+    start_memory = [0] * gpus
+    end_memory = [0] * gpus
+    peek_memory = 0
     # Memory Stats Initialization
-    reset_peak_memory_stats(device=cuda_device)
-    reset_max_memory_allocated(device=cuda_device)
-    start_memory = memory_allocated(device=cuda_device)
+    for device in range(gpus):
+        reset_peak_memory_stats(device=device)
+        reset_max_memory_allocated(device=device)
+        start_memory[device] = memory_allocated(device=device)
 
     if args.verbose:
         task_info = (
@@ -305,12 +309,14 @@ def main():
     if args.do_eval:
         all_metrics = eval_func(args, logger, trainer, all_metrics)
 
-    end_memory = memory_allocated(device=cuda_device)
-    peek_memory = max_memory_allocated(device=cuda_device)
+    for device in range(gpus):
+        end_memory[device] = memory_allocated(device=device)
+        peek_memory += max_memory_allocated(device=device)
     print(
-        f"\n\n\nMemory usage before: {start_memory} bytes\nMemory usage after: {int((end_memory/1024)/1024)}MB"
+        f"\n\n\nMemory usage before: {sum(start_memory)/1e6} MB\n"\
+        +f"Memory usage after: {sum(end_memory)/1e6} MB"
     )
-    print(f"\nPeak Memory usage: {int((peek_memory/1024)/1024)}MB\n\n\n")
+    print(f"\nPeak Memory usage: {peek_memory/1e6} MB\n\n\n")
 
     # WIP <-----------------------------------------<<<
 
@@ -325,10 +331,10 @@ def main():
         logger = get_logger(mempath, "memlog.log")
         logger.info(log_info)
         logger.info(
-            f"\nMemory usage before: {(start_memory/1024)/1024}MB\n"
-            + f"Memory usage after: {(end_memory/1024)/1024}MB"
+            f"\nMemory usage before: {sum(start_memory)/1e6} MB\n"
+            + f"Memory usage after: {sum(end_memory)/1e6} MB"
         )
-        logger.info(f"\nPeak Memory usage: {(peek_memory/1024)/1024}MB\n\n")
+        logger.info(f"\nPeak Memory usage: {peek_memory/1e6} MB\n\n")
 
     if (args.do_train or args.do_eval or args.do_predict):
         metrics_file_path = os.path.join(args.output_dir,
