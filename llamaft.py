@@ -246,7 +246,7 @@ def main():
     # Memory Log Path
     mempath = (
         f"/rscratch/tpang/kinshuk/RpMKin/llama_ft/{args.dataset}/"
-        + f"trainseed_{args.seed}/{sby}"
+        + f"{sby}"
     )
     
     # Control randomness
