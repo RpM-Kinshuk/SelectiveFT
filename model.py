@@ -16,8 +16,19 @@ from transformers import (
 import weightwatcher as ww
 from typing import Dict
 
+import bitsandbytes as bnb # type: ignore
+from peft import (
+    prepare_model_for_kbit_training, # type: ignore
+    LoraConfig, # type: ignore
+    get_peft_model, # type: ignore
+    PeftModel # type: ignore
+)
+from peft.tuners.lora import LoraLayer
+
 IGNORE_INDEX = -100
 DEFAULT_PAD_TOKEN = "[PAD]"
+if torch.cuda.is_available():   
+    torch.backends.cuda.matmul.allow_tf32 = True # type: ignore
 
 def smart_tokenizer_and_embedding_resize(
     special_tokens_dict: Dict,
@@ -44,6 +55,20 @@ def smart_tokenizer_and_embedding_resize(
         input_embeddings_data[-num_new_tokens:] = input_embeddings_avg # type: ignore
         output_embeddings_data[-num_new_tokens:] = output_embeddings_avg # type: ignore
 
+def find_all_linear_names(args, model):
+    cls = torch.nn.Linear
+    lora_module_names = set()
+    for name, module in model.named_modules():
+        if isinstance(module, cls):
+            names = name.split('.')
+            lora_module_names.add(names[0] if len(names) == 1 else names[-1])
+    if 'lm_head' in lora_module_names: # needed for 16-bit
+        lora_module_names.remove('lm_head')
+
+    print(f'Found {len(lora_module_names)} linear layers')
+    print(f'Linear layers: {lora_module_names}')
+    return list(lora_module_names)
+
 def get_model(args):
 
     if torch.cuda.is_available():
@@ -57,17 +82,19 @@ def get_model(args):
         local_rank = int(os.environ.get('LOCAL_RANK', '0'))
         device_map = {'': local_rank}
         max_memory = {'': max_memory[local_rank]}
-
+    
     model = AutoModelForCausalLM.from_pretrained(
         args.model_name_or_path, 
         token="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",
         device_map=device_map,
         max_memory=max_memory,
+        trust_remote_code=args.trust_remote_code,
     )
 
     model.config.use_cache = False
     setattr(model, 'model_parallel', True)
     setattr(model, 'is_parallelizable', True)
+    model.config.torch_dtype=(torch.float32 if args.fp16 else (torch.bfloat16 if args.bf16 else torch.float32))
 
     # Tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
@@ -101,26 +128,42 @@ def get_model(args):
                     else tokenizer.pad_token_id # type: ignore
                 ),
         })
-
-    for name, module in model.named_modules():
-        if 'norm' in name:
-            module = module.to(torch.float32)
-        if 'lm_head' in name or 'embed_tokens' in name:
-            if hasattr(module, 'weight'):
-                if args.bf16 and module.weight.dtype == torch.float32:
-                    module = module.to(torch.bfloat16) 
     
-    # SELECTIVE FINETUNING >>>------------------------------------->
-
-    if args.freeze:
+    if args.freeze and 'lora' not in args.sortby.lower():
         for name, param in model.named_parameters():
             param.requires_grad = False
             if "lm_head" in name:
                 param.requires_grad = True
-    else:
+    elif 'lora' not in args.sortby.lower():
         for name, param in model.named_parameters():  # type: ignore
             param.requires_grad = True
+        for name, module in model.named_modules():
+            if 'norm' in name:
+                module = module.to(torch.float32)
+            if 'lm_head' in name or 'embed_tokens' in name:
+                if hasattr(module, 'weight'):
+                    if args.bf16 and module.weight.dtype == torch.float32:
+                        module = module.to(torch.bfloat16) 
         return model, tokenizer
+
+    # LORA INJECTION >>>-------------------------------------------->
+
+
+    if 'lora' in args.sortby.lower():
+        model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=args.gradient_checkpointing)
+        print(f'adding LoRA modules...')
+        modules = find_all_linear_names(args, model)
+        config = LoraConfig(
+            r=args.lora_r,
+            lora_alpha=args.lora_alpha,
+            target_modules=modules,
+            lora_dropout=args.lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+        model = get_peft_model(model, config) # type: ignore
+
+    # SELECTIVE FINETUNING >>>------------------------------------->
     
     # if "lora" not in args.sortby.lower():
     #     # Save WeightWatcher Metrics
@@ -178,12 +221,15 @@ def get_model(args):
                 param.requires_grad = True
     
     for name, module in model.named_modules():
+        if isinstance(module, LoraLayer):
+            if args.bf16:
+                module = module.to(torch.bfloat16) # type: ignore
         if 'norm' in name:
-            module = module.to(torch.float32)
+            module = module.to(torch.float32) # type: ignore
         if 'lm_head' in name or 'embed_tokens' in name:
             if hasattr(module, 'weight'):
                 if args.bf16 and module.weight.dtype == torch.float32:
-                    module = module.to(torch.bfloat16) 
+                    module = module.to(torch.bfloat16) # type: ignore
     
     return model, tokenizer
 
