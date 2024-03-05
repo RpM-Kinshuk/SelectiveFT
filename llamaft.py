@@ -1,6 +1,7 @@
 #TODO: Handle extra args and save metrics systematically
 
 from model import get_model
+from loramodel import get_accelerate_model
 from traineval.eval import eval_func
 from traineval.train import train_func
 from loader.callbacks import mmlu_callback
@@ -48,7 +49,7 @@ class ModelArguments:
         default="meta-llama/Llama-2-7b-hf"
     )
     trust_remote_code: Optional[bool] = field(
-        default=False,
+        default=True,
         metadata={"help": "Enable unpickling of arbitrary code in AutoModelForCausalLM#from_pretrained."}
     )
     use_auth_token: Optional[bool] = field(
@@ -150,6 +151,34 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
     mmlu_source_max_len: int = field(
         default=2048,
         metadata={"help": "Maximum source sequence length for MMLU."}
+    )
+    adam8bit: bool = field(
+        default=False,
+        metadata={"help": "Use 8-bit adam."}
+    )
+    double_quant: bool = field(
+        default=True,
+        metadata={"help": "Compress the quantization statistics through double quantization."}
+    )
+    quant_type: str = field(
+        default="nf4",
+        metadata={"help": "Quantization data type to use. Should be one of `fp4` or `nf4`."}
+    )
+    bits: int = field(
+        default=4,
+        metadata={"help": "How many bits to use."}
+    )
+    lora_r: int = field(
+        default=64,
+        metadata={"help": "Lora R dimension."}
+    )
+    lora_alpha: float = field(
+        default=16,
+        metadata={"help": " Lora alpha."}
+    )
+    lora_dropout: float = field(
+        default=0.0,
+        metadata={"help":"Lora dropout."}
     )
     full_finetune: bool = field(
         default=False,
