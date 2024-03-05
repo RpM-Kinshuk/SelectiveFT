@@ -1,5 +1,5 @@
 #TODO: Handle extra args and save metrics systematically
-
+cachedir = '/rscratch/tpang/kinshuk/cache'
 from model import get_model
 from loramodel import get_accelerate_model
 from traineval.eval import eval_func
@@ -98,7 +98,7 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
         metadata={"help": "Random seed for reproducibility."}
     )
     cache_dir: Optional[str] = field(
-        default='/rscratch/tpang/kinshuk/cache',
+        default=cachedir,
     )
     verbose: Optional[bool] = field(
         default=True,
@@ -244,8 +244,8 @@ class GenerationArguments:
     no_repeat_ngram_size: Optional[int] = field(default=0)
 
 
-os.environ["TRANSFORMERS_CACHE"] = "/rscratch/tpang/kinshuk/cache"
-os.environ["HF_DATASETS_CACHE"]="/rscratch/tpang/kinshuk/cache"
+os.environ["TRANSFORMERS_CACHE"]=cachedir
+os.environ["HF_DATASETS_CACHE"]=cachedir
 
 def main():
     global logger
