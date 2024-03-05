@@ -14,4 +14,5 @@ python llamaft.py \
     --seed 7 \
     --sortby random \
     --num_layers 15 \
-    --memlog
+    --source_max_len 512
+    --per_device_train_batch_size 1 \
