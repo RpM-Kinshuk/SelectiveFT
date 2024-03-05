@@ -85,41 +85,11 @@ def find_all_linear_names(args, model):
         if isinstance(module, cls):
             names = name.split('.')
             lora_module_names.add(names[0] if len(names) == 1 else names[-1])
-
-
     if 'lm_head' in lora_module_names: # needed for 16-bit
         lora_module_names.remove('lm_head')
     return list(lora_module_names)
 
-
-class SavePeftModelCallback(transformers.TrainerCallback):
-    def save_model(self, args, state, kwargs):
-        print('Saving PEFT checkpoint...')
-        if state.best_model_checkpoint is not None:
-            checkpoint_folder = os.path.join(state.best_model_checkpoint, "adapter_model")
-        else:
-            checkpoint_folder = os.path.join(args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{state.global_step}")
-
-        peft_model_path = os.path.join(checkpoint_folder, "adapter_model")
-        kwargs["model"].save_pretrained(peft_model_path)
-
-        pytorch_model_path = os.path.join(checkpoint_folder, "pytorch_model.bin")
-        if os.path.exists(pytorch_model_path):
-            os.remove(pytorch_model_path)
-
-    def on_save(self, args, state, control, **kwargs):
-        self.save_model(args, state, kwargs)
-        return control
-
-    def on_train_end(self, args, state, control, **kwargs):
-        def touch(fname, times=None):
-            with open(fname, 'a'):
-                os.utime(fname, times)
-
-        touch(join(args.output_dir, 'completed'))
-        self.save_model(args, state, kwargs)
-
-def get_accelerate_model(args, checkpoint_dir):
+def get_accelerate_model(args, checkpoint_dir=None):
 
     if torch.cuda.is_available():
         n_gpus = torch.cuda.device_count()
@@ -211,17 +181,12 @@ def get_accelerate_model(args, checkpoint_dir):
                 ),
         })
 
-    if not args.full_finetune:
-        model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=args.gradient_checkpointing)
-
-    if not args.full_finetune:
-        if checkpoint_dir is not None:
-            print("Loading adapters from checkpoint.")
-            model = PeftModel.from_pretrained(model, join(checkpoint_dir, 'adapter_model'), is_trainable=True)
+    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=args.gradient_checkpointing)
         
     if 'lora' in args.sortby.lower():
         print(f'adding LoRA modules...')
         modules = find_all_linear_names(args, model)
+        print(f'LoRA modules: {modules}')
         config = LoraConfig(
             r=args.lora_r,
             lora_alpha=args.lora_alpha,
@@ -232,14 +197,14 @@ def get_accelerate_model(args, checkpoint_dir):
         )
         model = get_peft_model(model, config) # type: ignore
 
-        for name, module in model.named_modules():
-            if isinstance(module, LoraLayer):
-                if args.bf16:
+    for name, module in model.named_modules():
+        if isinstance(module, LoraLayer):
+            if args.bf16:
+                module = module.to(torch.bfloat16) # type: ignore
+        if 'norm' in name:
+            module = module.to(torch.float32) # type: ignore
+        if 'lm_head' in name or 'embed_tokens' in name:
+            if hasattr(module, 'weight'):
+                if args.bf16 and module.weight.dtype == torch.float32:
                     module = module.to(torch.bfloat16) # type: ignore
-            if 'norm' in name:
-                module = module.to(torch.float32) # type: ignore
-            if 'lm_head' in name or 'embed_tokens' in name:
-                if hasattr(module, 'weight'):
-                    if args.bf16 and module.weight.dtype == torch.float32:
-                        module = module.to(torch.bfloat16) # type: ignore
     return model, tokenizer
