@@ -179,7 +179,7 @@ def get_model(args):
         filtered = ww_details[  # type: ignore
             ww_details["longname"].str.contains("embed_tokens") == False  # type: ignore
         ]
-        sortby = "alpha"
+        sortby = "random"
         if args.num_layers > len(filtered):
             args.num_layers = len(filtered)
         if "random" in (args.sortby).lower():
