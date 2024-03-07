@@ -56,7 +56,7 @@ def smart_tokenizer_and_embedding_resize(
         output_embeddings_data[-num_new_tokens:] = output_embeddings_avg # type: ignore
 
 def find_all_linear_names(args, model):
-    cls = torch.nn.Linear
+    cls = bnb.nn.Linear4bit if args.bits == 4 else (bnb.nn.Linear8bitLt if args.bits == 8 else torch.nn.Linear)
     lora_module_names = set()
     for name, module in model.named_modules():
         if isinstance(module, cls):
@@ -86,8 +86,10 @@ def get_model(args):
     model = AutoModelForCausalLM.from_pretrained(
         args.model_name_or_path, 
         token="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",
-        device_map=device_map,
+        load_in_4bit = args.bits == 4,
+        load_in_8bit = args.bits == 8,
         max_memory=max_memory,
+        device_map=device_map,
         trust_remote_code=args.trust_remote_code,
     )
 
