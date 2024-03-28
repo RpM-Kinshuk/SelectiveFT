@@ -2,7 +2,6 @@ import os
 import io
 import torch
 import random
-import numpy as np
 import pandas as pd
 from transformers import (
     AutoModelForCausalLM,
@@ -15,6 +14,7 @@ from transformers import (
 )
 import weightwatcher as ww
 from typing import Dict
+from loader.layers import get_layers
 
 import bitsandbytes as bnb # type: ignore
 from peft import (
@@ -148,9 +148,8 @@ def get_model(args):
                         module = module.to(torch.bfloat16) 
         return model, tokenizer
 
+    
     # LORA INJECTION >>>-------------------------------------------->
-
-
     if 'lora' in args.sortby.lower():
         model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=args.gradient_checkpointing)
         print(f'adding LoRA modules...')
@@ -165,62 +164,17 @@ def get_model(args):
         )
         model = get_peft_model(model, config) # type: ignore
 
-    # SELECTIVE FINETUNING >>>------------------------------------->
-    
-    # if "lora" not in args.sortby.lower():
-    #     # Save WeightWatcher Metrics
-    #     watcher = ww.WeightWatcher(model=model)
-    #     ww_details = watcher.analyze(min_evals=10)
 
-    # if not args.debug and "lora" not in args.sortby.lower():
-    #     ww_details.to_csv(os.path.join(stats_path, f"epoch_{epoch}.csv"))  # type: ignore
-
-    ww_details = pd.read_csv("./llama_ww.csv")
+    # SELECTIVE FINETUNING >>>-------------------------------------->
     # CHOOSING LAYERS TO TRAIN BASED ON WEIGHTWATCHER METRICS/SORTBY
     if "lora" not in args.sortby.lower():
-        filtered = ww_details[  # type: ignore
-            ww_details["longname"].str.contains("embed_tokens") == False  # type: ignore
-        ]
-        sortby = "random"
-        if args.num_layers > len(filtered):
-            args.num_layers = len(filtered)
-        if "random" in (args.sortby).lower():
-            train_names = random.sample(filtered["longname"].to_list(), args.num_layers)
-        else:
-            if "alpha" in (args.sortby).lower():
-                sortby = "alpha"
-            elif "layer" in (args.sortby).lower():
-                sortby = "layer_id"
-            else:
-                sortby = "random"
-            train_names = (
-                filtered.sort_values(by=[sortby], ascending=args.sort_ascending)[
-                    "longname"
-                ]
-                .iloc[: args.num_layers]
-                .to_list()
-            )
-        if args.verbose:
-            print("Sorted by ", sortby)
-            print("Training layers:", train_names)
-        layer_to_train = []
-        for layer in train_names:
-            layer_to_train.append(layer + ".weight")
-            layer_to_train.append(layer + ".bias")
-            # Add Layer Norm
-            if args.add_layer_norm:
-                if "output" in layer:
-                    layer_to_train.append(
-                        layer.replace("dense", "LayerNorm") + ".weight"
-                    )
-                    layer_to_train.append(layer.replace("dense", "LayerNorm") + ".bias")
-        layer_to_train = list(set(layer_to_train))
+        layer_to_train = get_layers(args)
         # print("Final Training layers:", layer_to_train)
         for name, param in model.named_parameters():
             if name in layer_to_train:
+                param.requires_grad = True
                 if args.verbose:
                     print(f"Enabling {name} parameter")
-                param.requires_grad = True
     
     for name, module in model.named_modules():
         if isinstance(module, LoraLayer):
@@ -234,33 +188,3 @@ def get_model(args):
                     module = module.to(torch.bfloat16) # type: ignore
     
     return model, tokenizer
-
-    # Randomly select layers to train without ww metrics
-    param_optimizer = list(model.named_parameters())
-    unique_prefixes = set()
-    count = 0
-    for name, _ in param_optimizer:
-        # Extract the prefix by removing the last part (weight/bias)
-        prefix = ".".join(name.split(".")[:-1])
-        # Print only if the prefix is encountered for the first time
-        if prefix not in unique_prefixes and "norm" not in prefix.lower():
-            count += 1
-            # print(prefix)
-            unique_prefixes.add(prefix)
-    print(count)
-    count = 0
-    random_layers = random.sample(unique_prefixes, args.num_layers)  # type: ignore
-    print(f"Randomly selected layers: {random_layers}")
-    return model
-    uqd = set()
-    for name, param in model.named_parameters():
-        uqd.add(str(param.dtype))
-    print(uqd)
-    for name, param in model.named_parameters():
-        if name.rsplit(".", 1)[0] in random_layers:
-            print(name.rsplit(".", 1)[0])
-            # if param.dtype in [torch.float32, torch.float64, torch.complex64, torch.complex128]:
-            param.requires_grad = True
-            count += 1
-    print(f"Train layers: {count}\n\n")
-    return model
