@@ -1,5 +1,5 @@
 #TODO: Handle extra args and save metrics systematically
-cachedir = '/scratch/vipul/cache'
+cachedir = '/rscratch/tpang/kinshuk/cache'
 from model import get_model
 from traineval.eval import eval_func
 from traineval.train import train_func
