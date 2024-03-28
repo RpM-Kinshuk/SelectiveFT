@@ -55,7 +55,7 @@ class ModelArguments:
         default=False,
         metadata={"help": "To use Huggingface auth token from Git Credentials."}
     )
-    lora_modules: list = field(default_factory=list)
+    lora_modules: Optional[list[str]] = field(default_factory=list)
 
 @dataclass
 class DataArguments:
