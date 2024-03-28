@@ -1,5 +1,5 @@
 #TODO: Handle extra args and save metrics systematically
-cachedir = '/rscratch/tpang/kinshuk/cache'
+cachedir = '/scratch/vipul/cache'
 from model import get_model
 from traineval.eval import eval_func
 from traineval.train import train_func
@@ -55,6 +55,7 @@ class ModelArguments:
         default=False,
         metadata={"help": "To use Huggingface auth token from Git Credentials."}
     )
+    lora_modules: list = field(default_factory=list)
 
 @dataclass
 class DataArguments:
@@ -143,6 +144,10 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
         default=False,
         metadata={"help": "Whether to run the MMLU evaluation."}
     )
+    do_eval: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Whether to run the evaluation."}
+    )
     max_mmlu_samples: Optional[int] = field(
         default=None,
         metadata={"help": "If set, only evaluates on `max_mmlu_samples` of the MMMLU dataset."}
@@ -156,7 +161,7 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
         metadata={"help": "Use 8-bit adam."}
     )
     double_quant: bool = field(
-        default=True,
+        default=False,
         metadata={"help": "Compress the quantization statistics through double quantization."}
     )
     quant_type: str = field(
@@ -168,7 +173,7 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
         metadata={"help": "How many bits to use."}
     )
     lora_r: int = field(
-        default=64,
+        default=8,
         metadata={"help": "Lora R dimension."}
     )
     lora_alpha: float = field(
@@ -184,7 +189,7 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
         metadata={"help": "Finetune the entire model without adapters."}
     )
     max_memory_MB: int = field(
-        default=12000,
+        default=45000,
         metadata={"help": "Free memory per gpu."}
     )
     report_to: str = field(
@@ -194,13 +199,13 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
     output_dir: str = field(default='./output', metadata={"help": 'The output dir for logs and checkpoints'})
     optim: str = field(default='paged_adamw_32bit', metadata={"help": 'The optimizer to be used'})
     per_device_train_batch_size: int = field(default=1, metadata={"help": 'The training batch size per GPU.'})
-    gradient_accumulation_steps: int = field(default=16, metadata={"help": 'Gradients to accumulate before performing an optimizer step'})
+    gradient_accumulation_steps: int = field(default=1, metadata={"help": 'Gradients to accumulate before performing an optimizer step'})
     max_steps: int = field(default=10000, metadata={"help": 'How many optimizer update steps to take'})
     weight_decay: float = field(default=0.0, metadata={"help": 'The L2 weight decay rate of AdamW'}) # use lora dropout instead for regularization if needed
     learning_rate: float = field(default=0.0002, metadata={"help": 'The learnign rate'})
     remove_unused_columns: bool = field(default=False, metadata={"help": 'Removed unused columns. Needed to make this codebase work.'})
     max_grad_norm: float = field(default=0.3, metadata={"help": 'Gradient clipping max norm. This is tuned and works well for all models tested.'})
-    gradient_checkpointing: bool = field(default=True, metadata={"help": 'Use gradient checkpointing. You want to use this.'})
+    gradient_checkpointing: bool = field(default=False, metadata={"help": 'Use gradient checkpointing. You want to use this.'})
     do_train: bool = field(default=True, metadata={"help": 'To train or not.'})
     lr_scheduler_type: str = field(default='constant', metadata={"help": 'Learning rate schedule. Constant a bit better than cosine, and has advantage for analysis'})
     warmup_ratio: float = field(default=0.03, metadata={"help": 'Fraction of steps to do a warmup for'})

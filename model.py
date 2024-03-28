@@ -125,20 +125,23 @@ def get_model(args):
                 "eos_token": tokenizer.convert_ids_to_tokens(model.config.eos_token_id),
                 "bos_token": tokenizer.convert_ids_to_tokens(model.config.bos_token_id),
                 "unk_token": tokenizer.convert_ids_to_tokens(
-                    model.config.pad_token_id
-                    if model.config.pad_token_id != -1
-                    else tokenizer.pad_token_id # type: ignore
+                    # model.config.pad_token_id
+                    # if model.config.pad_token_id != -1
+                    tokenizer.pad_token_id # type: ignore
                 ),
         })
     
     if args.freeze and 'lora' not in args.sortby.lower():
         for name, param in model.named_parameters():
-            param.requires_grad = False
+            param.requires_grad = True
             if "lm_head" in name:
                 param.requires_grad = True
     elif 'lora' not in args.sortby.lower():
         for name, param in model.named_parameters():  # type: ignore
-            param.requires_grad = True
+            if "embed_token" not in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
         for name, module in model.named_modules():
             if 'norm' in name:
                 module = module.to(torch.float32)
@@ -153,7 +156,10 @@ def get_model(args):
     if 'lora' in args.sortby.lower():
         model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=args.gradient_checkpointing)
         print(f'adding LoRA modules...')
-        modules = find_all_linear_names(args, model)
+        if len(args.lora_modules) > 0:
+            modules = args.lora_modules
+        else:
+            modules = find_all_linear_names(args, model)
         config = LoraConfig(
             r=args.lora_r,
             lora_alpha=args.lora_alpha,
