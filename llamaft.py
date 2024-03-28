@@ -169,7 +169,7 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
         metadata={"help": "Quantization data type to use. Should be one of `fp4` or `nf4`."}
     )
     bits: int = field(
-        default=4,
+        default=16,
         metadata={"help": "How many bits to use."}
     )
     lora_r: int = field(
