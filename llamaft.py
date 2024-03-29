@@ -1,11 +1,11 @@
 #TODO: Handle extra args and save metrics systematically
-cachedir = '/rscratch/tpang/kinshuk/cache'
-from model import get_model
-from traineval.eval import eval_func
-from traineval.train import train_func
-from loader.callbacks import mmlu_callback
-from loader.data_module import make_data_module
 import os
+cachedir = '/rscratch/tpang/kinshuk/cache'
+os.environ["TRANSFORMERS_CACHE"]=cachedir
+os.environ["HF_DATASETS_CACHE"]=cachedir
+from tqdm.auto import tqdm
+from model import get_model
+from loader.data_module import make_data_module
 import json
 import torch
 import random
@@ -30,6 +30,7 @@ from transformers import (
 )
 # from accelerate import Accelerator
 from os.path import exists, join, isdir
+from torch.utils.data import DataLoader
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Sequence
 
@@ -39,7 +40,6 @@ from transformers.utils.logging import (
 from datasets.utils.logging import (
     set_verbosity_error as datasets_vb_err,
 )
-
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -247,10 +247,6 @@ class GenerationArguments:
     length_penalty: Optional[float] = field(default=1.0)
     no_repeat_ngram_size: Optional[int] = field(default=0)
 
-
-os.environ["TRANSFORMERS_CACHE"]=cachedir
-os.environ["HF_DATASETS_CACHE"]=cachedir
-
 def main():
     global logger
     hfparser = transformers.HfArgumentParser((
@@ -266,48 +262,13 @@ def main():
     )
     print(args)
     os.environ["TRANSFORMERS_CACHE"] = args.cache_dir
-    cuda_device = torch.cuda.current_device()
-    gpus = torch.cuda.device_count()
-    sby = args.sortby
-    if "alpha" in (args.sortby).lower():
-        sby = "alpha"
-    elif "layer" in (args.sortby).lower():
-        sby = "layer"
-    else:
-        sby = "rand"
-
-    # Memory Log Path
-    mempath = (
-        f"/rscratch/tpang/kinshuk/RpMKin/llama_ft/{args.dataset}/"
-        + f"{sby}"
-    )
-    
-    # Control randomness
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    # accelerate.utils.set_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)
-    torch.backends.cudnn.benchmark = False
-    torch.backends.cudnn.deterministic = True
-    set_seed(args.seed)  # transformers seed
-    
-    start_memory = [0] * gpus
-    end_memory = [0] * gpus
-    peek_memory = 0
-    # Memory Stats Initialization
-    for device in range(gpus):
-        reset_peak_memory_stats(device=device)
-        reset_max_memory_allocated(device=device)
-        start_memory[device] = memory_allocated(device=device)
-
+    os.environ["HF_DATASETS_CACHE"]= args.cache_dir
     if args.verbose:
         task_info = (
-            f"\n\n\nSeed: {args.seed}\n\n"
-            + f"Dataset: {args.dataset}\n\n"
-            + f"Sort by: {args.sortby}\n\n"
-            + f"Sort Descending: {not args.sort_ascending}\n\n"
-            + f"Layers to train: {args.num_layers}\n\n\n"
+            f"\nSeed: {args.seed}\n"
+            + f"Dataset: {args.dataset}\n"
+            + f"Sort by: {args.sortby}\n"
+            + f"Layers to train: {args.num_layers}\n"
         )
         print(task_info)
     else:
@@ -315,71 +276,89 @@ def main():
         transformers_vb_err()
         global _tqdm_active
         _tqdm_active = False
-
-    # WIP >>>------------------------------------------>
-
+    
+    # Control randomness
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    set_seed(args.seed)  # transformers seed
+    
+    gpus = torch.cuda.device_count()
+    start_memory = [0] * gpus
+    peek_memory = 0 
+    sby = args.sortby
+    if 'random' in args.sortby.lower():
+        sby = "rand"
+    mempath = (
+        f"/rscratch/tpang/kinshuk/RpMKin/llama_ft/{args.dataset}/"
+        + f"{sby}"
+    )
+    def memall(gpus=gpus):
+        for i in range(gpus):
+            start_memory[i] = torch.cuda.memory_allocated(i)
+        return sum(start_memory)
+    
     model, tokenizer = get_model(args)
+    for device in range(gpus):
+        reset_peak_memory_stats(device=device)
+        reset_max_memory_allocated(device=device)
+    weight_memory = memall()
 
     data_module = make_data_module(tokenizer=tokenizer, args=args) # type: ignore
-
-    trainer = Seq2SeqTrainer(
-        model=model,
-        tokenizer=tokenizer,
-        args=training_args,
-        **{k:v for k,v in data_module.items() if k != 'predict_dataset'},
+    dataset = {k:v for k,v in data_module.items()}
+    train_dataloader = DataLoader(
+        dataset['train_dataset'], # type: ignore
+        batch_size=args.per_device_train_batch_size,
+        collate_fn=dataset['data_collator']
     )
+    input_memory = memall()- weight_memory
 
-    if args.do_mmlu_eval:
-        trainer = mmlu_callback(args, tokenizer, trainer)
+    optimizer = torch.optim.Adam(model.parameters(), lr=2e-4, betas=(0.9,0.999), eps=1e-5)
 
-    all_metrics = {"run_name": args.run_name}
+    model.train()
+    optimizer.zero_grad()
+    for epoch in range(1):
+        for step, batch in enumerate(tqdm(train_dataloader)):
+            batch = {k: v.to(model.device) for k, v in batch.items()}
+            output = model(**batch)
+            activation_memory = memall() - weight_memory
+            # loss = loss_fn(out.logits, batch["labels"]) / args.gradient_accumulation_steps
+            loss = output.loss
+            loss.backward()
+            gradient_memory = memall() - weight_memory
+            optimizer.step()
+            optimizer_memory = memall() - gradient_memory - weight_memory 
+            optimizer.zero_grad()
+            if step == args.max_steps:
+                model.eval()
+                break
 
-    # Train
-    if args.do_train:
-        all_metrics = train_func(args, logger, trainer, all_metrics)
-    
-    # Eval
-    if args.do_eval:
-        all_metrics = eval_func(args, logger, trainer, all_metrics)
-
-    for device in range(gpus):
-        end_memory[device] = memory_allocated(device=device)
-        peek_memory += max_memory_allocated(device=device)
-    print(
-        f"\n\n\nMemory usage before: {int(sum(start_memory)/1e6)} MB\n"\
-        +f"Memory usage after: {int(sum(end_memory)/1e6)} MB"
+    total_memory = memall()
+    peek_memory = max([max_memory_allocated(i) for i in range(gpus)])
+    memory_string = (
+        f"Weight memory    : {weight_memory / 1e6} MB\n"
+        # f"Input memory     : {input_memory / 1e6} MB\n"
+        f"Activation memory: {activation_memory / 1e6} MB\n"
+        f"Gradient memory  : {gradient_memory / 1e6} MB\n"
+        # f"Optimizer memory : {optimizer_memory / 1e6} MB\n"
+        f"Total memory     : {total_memory / 1e6} MB\n"
+        f"Peak memory      : {peek_memory / 1e6} MB\n"
     )
-    print(f"\nPeak Memory usage: {int(peek_memory/1e6)} MB\n\n\n")
-
-    # WIP <-----------------------------------------<<<
-
-    if args.memlog: # Memory Logging
+    if args.verbose:
+        print(memory_string)
+    if args.memlog:
         log_info = (
             f"\n\n{args.dataset} "
-            + f"{args.num_layers} Layers "
             + f"{args.sortby} "
-            + f"Ascending {args.sort_ascending}"
+            + f"{args.num_layers} Layers "
         )
         Path(mempath).mkdir(parents=True, exist_ok=True)
         logger = get_logger(mempath, "memlog.log")
         logger.info(log_info)
-        logger.info(
-            f"\nMemory usage before: {int(sum(start_memory)/1e6)} MB\n"
-            + f"Memory usage after: {int(sum(end_memory)/1e6)} MB"
-        )
-        logger.info(f"\nPeak Memory usage: {int(peek_memory/1e6)} MB\n\n")
-
-    if (args.do_train or args.do_eval or args.do_predict):
-        metrics_file_path = os.path.join(args.output_dir,
-                                    f'trainseed_{args.seed}',
-                                    args.dataset,
-                                    f"{sby}_asc_{args.sort_ascending}",
-                                    f"layers_{args.num_layers}",
-                                    "metrics.json")
-
-        os.makedirs(os.path.dirname(metrics_file_path), exist_ok=True)
-        with open(metrics_file_path, "w") as fout:
-            fout.write(json.dumps(all_metrics))
+        logger.info(f"\n{memory_string}\n")
 
 if __name__ == "__main__":
     main()
