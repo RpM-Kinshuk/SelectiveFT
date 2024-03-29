@@ -37,3 +37,10 @@ def get_layers(args, layer_identifier='longname'):
             layer_to_train.append(layer + ".weight")
     layer_to_train = list(set(layer_to_train))
     return layer_to_train
+
+
+def param_count(m):
+    params = sum([p.numel() for p in m.parameters()])/1_000_000
+    trainable_params = sum([p.numel() for p in m.parameters() if p.requires_grad])/1_000_000
+    print(f"Total params: {params:.2f}M, Trainable: {trainable_params:.2f}M")
+    return params, trainable_params
