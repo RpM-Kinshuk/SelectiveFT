@@ -131,9 +131,9 @@ def get_model(args):
                 ),
         })
     
-    if args.freeze and 'lora' not in args.sortby.lower():
+    if args.freeze == True and 'lora' not in args.sortby.lower():
         for name, param in model.named_parameters():
-            param.requires_grad = True
+            param.requires_grad = False
             if "lm_head" in name:
                 param.requires_grad = True
     elif 'lora' not in args.sortby.lower():
