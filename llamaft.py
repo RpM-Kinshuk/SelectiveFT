@@ -5,6 +5,7 @@ os.environ["TRANSFORMERS_CACHE"]=cachedir
 os.environ["HF_DATASETS_CACHE"]=cachedir
 from tqdm.auto import tqdm
 from model import get_model
+from traineval.eval import eval_func
 from loader.data_module import make_data_module
 import json
 import torch
@@ -319,22 +320,42 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=2e-4, betas=(0.9,0.999), eps=1e-5)
 
     model.train()
-    optimizer.zero_grad()
+    
+    train_losses = []
+    val_losses = []
+    val_accs = []
+
     for epoch in range(1):
+        train_loss = 0
+        tr_steps = 0
         for step, batch in enumerate(tqdm(train_dataloader)):
+            optimizer.zero_grad()
             batch = {k: v.to(model.device) for k, v in batch.items()}
             output = model(**batch)
             activation_memory = memall() - weight_memory
             # loss = loss_fn(out.logits, batch["labels"]) / args.gradient_accumulation_steps
             loss = output.loss
+            train_loss += loss.item()
             loss.backward()
             gradient_memory = memall() - weight_memory
             optimizer.step()
             optimizer_memory = memall() - gradient_memory - weight_memory 
-            optimizer.zero_grad()
+            tr_steps += 1
+            train_losses.append(train_loss/tr_steps)
             if step == args.max_steps:
                 model.eval()
                 break
+    
+    trainer=Seq2SeqTrainer(
+                model=model,
+                tokenizer=tokenizer,
+                args=training_args,
+                **{k:v for k,v in data_module.items() if k != 'predict_dataset'},
+            )
+    all_metrics = {"run_name": args.run_name}
+
+    if args.do_eval:
+        all_metrics = eval_func(args, logger, trainer, all_metrics)
 
     total_memory = memall()
     peek_memory = max([max_memory_allocated(i) for i in range(gpus)])
@@ -343,7 +364,7 @@ def main():
         # f"Input memory     : {input_memory / 1e6} MB\n"
         f"Activation memory: {activation_memory / 1e6} MB\n"
         f"Gradient memory  : {gradient_memory / 1e6} MB\n"
-        # f"Optimizer memory : {optimizer_memory / 1e6} MB\n"
+        f"Optimizer memory : {optimizer_memory / 1e6} MB\n"
         f"Total memory     : {total_memory / 1e6} MB\n"
         f"Peak memory      : {peek_memory / 1e6} MB\n"
     )
@@ -359,6 +380,10 @@ def main():
         logger = get_logger(mempath, "memlog.log")
         logger.info(log_info)
         logger.info(f"\n{memory_string}\n")
+    
+    if (args.do_train or args.do_eval or args.do_predict):
+        with open(os.path.join(args.output_dir, "metrics.json"), "w") as fout:
+            fout.write(json.dumps(all_metrics))
 
 if __name__ == "__main__":
     main()
