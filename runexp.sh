@@ -1,18 +1,19 @@
-python llamaft.py \
+CUDA_VISIBLE_DEVICES=5 python llamaft.py \
     --output_dir /rscratch/tpang/kinshuk/RpMKin/llama_ft/data \
-    --logging_steps 10 \
-    --data_seed 42 \
-    --evaluation_strategy steps \
-    --max_eval_samples 50 \
-    --dataloader_num_workers 1 \
-    --logging_strategy steps \
-    --do_eval false \
-    --dataset oasst1 \
-    --max_steps 5 \
-    --eval_steps 187 \
-    --adam_beta2 0.999 \
     --seed 7 \
-    --sortby random \
-    --num_layers 15 \
-    --source_max_len 512
-    --per_device_train_batch_size 1 \
+    --data_seed 7 \
+    --dataset alpaca \
+    --max_eval_samples 1000 \
+    --dataloader_num_workers 1 \
+    --do_eval false \
+    --max_steps 2 \
+    --sortby lora \
+    --num_layers 10 \
+    --source_max_len 256 \
+    --target_max_len 512 \
+    --memlog \
+    --eval_dataset_size 1024 \
+    --eval_steps 187 \
+    --lora_r 64 \
+    --lora_alpha 16 \
+    --per_device_train_batch_size 1
