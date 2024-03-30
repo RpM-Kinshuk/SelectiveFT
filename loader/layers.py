@@ -2,7 +2,7 @@ import pandas as pd
 import random
 
 def get_layers(args, layer_identifier='longname'):    
-    ww_details = pd.read_csv("./llama_ww.csv")
+    ww_details = pd.read_csv("/rscratch/tpang/kinshuk/RpMKin/llama_ft/LlaMAft/llama_ww.csv")
     filtered = ww_details[  # type: ignore
         ww_details["longname"].str.contains("embed_tokens") == False  # type: ignore
     ]
