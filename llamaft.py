@@ -5,6 +5,7 @@ os.environ["TRANSFORMERS_CACHE"]=cachedir
 os.environ["HF_DATASETS_CACHE"]=cachedir
 from tqdm.auto import tqdm
 from model import get_model
+from loader.layers import param_count
 from traineval.eval import eval_func
 from loader.data_module import make_data_module
 import json
@@ -289,14 +290,8 @@ def main():
     
     gpus = torch.cuda.device_count()
     start_memory = [0] * gpus
-    peek_memory = 0 
-    sby = args.sortby
-    if 'random' in args.sortby.lower():
-        sby = "rand"
-    mempath = (
-        f"/rscratch/tpang/kinshuk/RpMKin/llama_ft/{args.dataset}/"
-        + f"{sby}"
-    )
+    peek_memory = 0
+
     def memall(gpus=gpus):
         for i in range(gpus):
             start_memory[i] = torch.cuda.memory_allocated(i)
@@ -317,14 +312,12 @@ def main():
     )
     input_memory = memall()- weight_memory
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=2e-4, betas=(0.9,0.999), eps=1e-5)
-
-    model.train()
-    
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
     train_losses = []
     val_losses = []
     val_accs = []
 
+    model.train()
     for epoch in range(1):
         train_loss = 0
         tr_steps = 0
@@ -342,6 +335,8 @@ def main():
             optimizer_memory = memall() - gradient_memory - weight_memory 
             tr_steps += 1
             train_losses.append(train_loss/tr_steps)
+            if args.verbose and step % 50 == 0:
+                print(f'Step: {step}, Train Loss: {train_loss/tr_steps}')
             if step == args.max_steps:
                 model.eval()
                 break
@@ -353,37 +348,45 @@ def main():
                 **{k:v for k,v in data_module.items() if k != 'predict_dataset'},
             )
     all_metrics = {"run_name": args.run_name}
-
     if args.do_eval:
         all_metrics = eval_func(args, logger, trainer, all_metrics)
 
     total_memory = memall()
     peek_memory = max([max_memory_allocated(i) for i in range(gpus)])
     memory_string = (
+        f"{param_count(model)}\n"
+        f"Method           : {args.sortby}\n"
+        f"Layers           : {args.num_layers}\n"
+        f"Learning Rate    : {args.learning_rate}\n"
+        f"Batch size       : {args.per_device_train_batch_size}\n"
         f"Weight memory    : {weight_memory / 1e6} MB\n"
-        # f"Input memory     : {input_memory / 1e6} MB\n"
         f"Activation memory: {activation_memory / 1e6} MB\n"
         f"Gradient memory  : {gradient_memory / 1e6} MB\n"
         f"Optimizer memory : {optimizer_memory / 1e6} MB\n"
         f"Total memory     : {total_memory / 1e6} MB\n"
         f"Peak memory      : {peek_memory / 1e6} MB\n"
     )
+    base = {"train_loss": train_loss,}
+    savepath = f"./output/{args.dataset}/lr_{args.learning_rate}/batch_{args.per_device_train_batch_size}/{args.sortby}/layers_{args.num_layers}"
     if args.verbose:
         print(memory_string)
     if args.memlog:
+        Path(savepath).mkdir(parents=True, exist_ok=True)
+        np.save(os.path.join(savepath, "finetune.npy"), base) # type: ignore
+        with open(os.path.join(savepath, "metrics.json"), "w") as fout:
+            fout.write(json.dumps(all_metrics))
         log_info = (
             f"\n\n{args.dataset} "
-            + f"{args.sortby} "
-            + f"{args.num_layers} Layers "
+            + f"Batch Size {args.per_device_train_batch_size} "
+            + f"{args.sortby} fine-tuning "
+            + f"{args.num_layers} Layers"
         )
-        Path(mempath).mkdir(parents=True, exist_ok=True)
-        logger = get_logger(mempath, "memlog.log")
+        logger = get_logger(savepath, "memlog.log")
         logger.info(log_info)
         logger.info(f"\n{memory_string}\n")
-    
-    if (args.do_train or args.do_eval or args.do_predict):
-        with open(os.path.join(args.output_dir, "metrics.json"), "w") as fout:
-            fout.write(json.dumps(all_metrics))
+        if (args.do_train or args.do_eval or args.do_predict):
+            with open(os.path.join(savepath, "metrics.json"), "w") as fout:
+                fout.write(json.dumps(all_metrics))
 
 if __name__ == "__main__":
     main()
