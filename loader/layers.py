@@ -29,7 +29,7 @@ def get_layers(args, layer_identifier='longname'):
     
     layer_to_train = []
     for layer in train_names:
-        if 'lora' in args.sortby.lower():
+        if 'ora' in args.sortby.lower():
             layer_parts = layer.split(".")
             if len(layer_parts) > 2:
                 layer_to_train.append(int(layer_parts[2]))
