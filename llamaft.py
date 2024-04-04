@@ -116,7 +116,7 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
     )
     sortby: str = field(
         default='random',
-        metadata={"help": "Layer sorting method. [random|alpha|layer]"}
+        metadata={"help": "Layer sorting method. [random|alpha|layer|LoRA|DoRA]"}
     )
     num_layers: int = field(
         default=0,
