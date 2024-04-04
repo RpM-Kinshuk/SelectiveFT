@@ -64,6 +64,9 @@ def find_all_linear_names(args, model):
             lora_module_names.add(names[0] if len(names) == 1 else names[-1])
     if 'lm_head' in lora_module_names: # needed for 16-bit
         lora_module_names.remove('lm_head')
+    
+    if 'dora' in args.sortby.lower():
+        lora_module_names.add('lora_magnitude_vector')
 
     print(f'Found {len(lora_module_names)} linear layers')
     print(f'Linear layers: {lora_module_names}')
@@ -131,12 +134,12 @@ def get_model(args):
                 ),
         })
     
-    if args.freeze == True and 'lora' not in args.sortby.lower():
+    if args.freeze == True and 'ora' not in args.sortby.lower():
         for name, param in model.named_parameters():
             param.requires_grad = False
             if "lm_head" in name:
                 param.requires_grad = True
-    elif 'lora' not in args.sortby.lower():
+    elif 'ora' not in args.sortby.lower():
         for name, param in model.named_parameters():  # type: ignore
             if "embed_token" not in name:
                 param.requires_grad = True
@@ -150,14 +153,15 @@ def get_model(args):
                     if args.bf16 and module.weight.dtype == torch.float32:
                         module = module.to(torch.bfloat16) 
         return model, tokenizer
-
     
     # LORA INJECTION >>>-------------------------------------------->
-    if 'lora' in args.sortby.lower():
+    if 'ora' in args.sortby.lower():
         model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=args.gradient_checkpointing)
-        print(f'adding LoRA modules...')
+        print(f'Adding {args.sortby.upper()[0]}oRA modules...')
         if len(args.lora_modules) > 0:
             modules = args.lora_modules
+            if 'dora' in args.sortby.lower():
+                modules.append('lora_magnitude_vector')
         else:
             modules = find_all_linear_names(args, model)
         config = LoraConfig(
@@ -167,13 +171,13 @@ def get_model(args):
             lora_dropout=args.lora_dropout,
             bias="none",
             task_type="CAUSAL_LM",
+            use_dora='dora' in args.sortby.lower(),
         )
         model = get_peft_model(model, config) # type: ignore
 
-
     # SELECTIVE FINETUNING >>>-------------------------------------->
     # CHOOSING LAYERS TO TRAIN BASED ON WEIGHTWATCHER METRICS/SORTBY
-    if "lora" not in args.sortby.lower():
+    if "ora" not in args.sortby.lower():
         layer_to_train = get_layers(args)
         # print("Final Training layers:", layer_to_train)
         for name, param in model.named_parameters():
