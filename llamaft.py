@@ -310,37 +310,55 @@ def main():
         batch_size=args.per_device_train_batch_size,
         collate_fn=dataset['data_collator']
     )
-    input_memory = memall()- weight_memory
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    def loss_fn(x, y):
+        "A Flat CrossEntropy" 
+        return torch.nn.functional.cross_entropy(x.view(-1, x.shape[-1]), y.view(-1))
+
     train_losses = []
     val_losses = []
     val_accs = []
 
     model.train()
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    optimizer.zero_grad() 
+
     for epoch in range(1):
         train_loss = 0
         tr_steps = 0
-        for step, batch in enumerate(tqdm(train_dataloader)):
+        for step, batch in enumerate((train_dataloader)):
             optimizer.zero_grad()
+            curr = memall()
             batch = {k: v.to(model.device) for k, v in batch.items()}
+            input_memory = memall() - curr
+            
+            curr = memall()
             output = model(**batch)
-            activation_memory = memall() - weight_memory
+            activation_memory = memall() - curr
             # loss = loss_fn(out.logits, batch["labels"]) / args.gradient_accumulation_steps
             loss = output.loss
-            train_loss += loss.item()
+            
+            curr = memall()
             loss.backward()
-            gradient_memory = memall() - weight_memory
+            gradient_memory = memall() - curr
+            
+            curr = memall()
             optimizer.step()
-            optimizer_memory = memall() - gradient_memory - weight_memory 
+            if step == 0:
+                 optimizer_memory = memall() - curr
+            
+            loss = loss.cpu()
+            train_loss += loss.item()
             tr_steps += 1
             train_losses.append(train_loss/tr_steps)
-            if args.verbose and step % 50 == 0:
+            if step % 50 == 0:
                 print(f'Step: {step}, Train Loss: {train_loss/tr_steps}')
+            torch.cuda.empty_cache()
             if step == args.max_steps:
                 model.eval()
                 break
     
+    total_memory = memall()
     trainer=Seq2SeqTrainer(
                 model=model,
                 tokenizer=tokenizer,
@@ -360,9 +378,10 @@ def main():
         f"Learning Rate    : {args.learning_rate}\n"
         f"Batch size       : {args.per_device_train_batch_size}\n"
         f"Weight memory    : {weight_memory / 1e6} MB\n"
+        f"Optimizer memory : {optimizer_memory / 1e6} MB\n"
         f"Activation memory: {activation_memory / 1e6} MB\n"
         f"Gradient memory  : {gradient_memory / 1e6} MB\n"
-        f"Optimizer memory : {optimizer_memory / 1e6} MB\n"
+        f"Input memory     : {input_memory / 1e6} MB\n"
         f"Total memory     : {total_memory / 1e6} MB\n"
         f"Peak memory      : {peek_memory / 1e6} MB\n"
     )
