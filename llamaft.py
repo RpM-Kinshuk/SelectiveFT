@@ -320,7 +320,7 @@ def main():
     val_accs = []
 
     model.train()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, betas=(0.9,0.99), eps=1e-5)
     optimizer.zero_grad() 
 
     for epoch in range(1):
@@ -385,7 +385,7 @@ def main():
         f"Total memory     : {total_memory / 1e6} MB\n"
         f"Peak memory      : {peek_memory / 1e6} MB\n"
     )
-    base = {"train_loss": train_losses,}
+    base = {"train_loss": train_loss,}
     savepath = f"./output/{args.dataset}/lr_{args.learning_rate}/batch_{args.per_device_train_batch_size}/{args.sortby}/layers_{args.num_layers}"
     if args.verbose:
         print(memory_string)
