@@ -331,22 +331,22 @@ def main():
             curr = memall()
             batch = {k: v.to(model.device) for k, v in batch.items()}
             input_memory = memall() - curr
-            
+
             curr = memall()
             output = model(**batch)
             activation_memory = memall() - curr
+
+            curr = memall()
             # loss = loss_fn(out.logits, batch["labels"]) / args.gradient_accumulation_steps
             loss = output.loss
-            
-            curr = memall()
             loss.backward()
-            gradient_memory = memall() - curr
-            
+            gradient_memory = memall() - input_memory - weight_memory - optimizer_memory
+
             curr = memall()
             optimizer.step()
             if step == 0:
                  optimizer_memory = memall() - curr
-            
+
             loss = loss.cpu()
             train_loss += loss.item()
             tr_steps += 1
