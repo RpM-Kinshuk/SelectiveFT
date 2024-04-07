@@ -9,6 +9,7 @@ from loader.layers import param_count
 from traineval.eval import eval_func
 from loader.data_module import make_data_module
 import json
+import time
 import torch
 import random
 import logging
@@ -318,28 +319,40 @@ def main():
     train_losses = []
     val_losses = []
     val_accs = []
+    times = []
 
     model.train()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, betas=(0.9,0.99), eps=1e-5)
-    optimizer.zero_grad() 
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    optimizer.zero_grad()
+    optimizer_memory = 0
+    forward_time = 0
+    backward_time = 0
 
     for epoch in range(1):
         train_loss = 0
         tr_steps = 0
+        tick = 0
+        total_time = 0
         for step, batch in enumerate((train_dataloader)):
+
+            tick = time.time()
             optimizer.zero_grad()
             curr = memall()
             batch = {k: v.to(model.device) for k, v in batch.items()}
             input_memory = memall() - curr
 
             curr = memall()
+            start = time.time()
             output = model(**batch)
+            forward_time += time.time() - start
             activation_memory = memall() - curr
 
             curr = memall()
+            start = time.time()
             # loss = loss_fn(out.logits, batch["labels"]) / args.gradient_accumulation_steps
             loss = output.loss
             loss.backward()
+            backward_time += time.time() - start
             gradient_memory = memall() - input_memory - weight_memory - optimizer_memory
 
             curr = memall()
@@ -351,13 +364,15 @@ def main():
             train_loss += loss.item()
             tr_steps += 1
             train_losses.append(train_loss/tr_steps)
-            if step % 50 == 0:
+            if step % 50 == 0 and args.verbose:
                 print(f'Step: {step}, Train Loss: {train_loss/tr_steps}')
             torch.cuda.empty_cache()
+            total_time += time.time() - tick
+            times.append(total_time)
             if step == args.max_steps:
                 model.eval()
                 break
-    
+
     total_memory = memall()
     trainer=Seq2SeqTrainer(
                 model=model,
@@ -373,10 +388,13 @@ def main():
     peek_memory = max([max_memory_allocated(i) for i in range(gpus)])
     memory_string = (
         f"{param_count(model)}\n"
+        f"Dataset          : {args.dataset}\n"
         f"Method           : {args.sortby}\n"
         f"Layers           : {args.num_layers}\n"
-        f"Learning Rate    : {args.learning_rate}\n"
         f"Batch size       : {args.per_device_train_batch_size}\n"
+        f"Learning Rate    : {args.learning_rate}\n"
+        f"Forward time     : {forward_time/60} min\n"
+        f"Backward time    : {backward_time/60} min\n"
         f"Weight memory    : {weight_memory / 1e6} MB\n"
         f"Optimizer memory : {optimizer_memory / 1e6} MB\n"
         f"Activation memory: {activation_memory / 1e6} MB\n"
@@ -385,7 +403,7 @@ def main():
         f"Total memory     : {total_memory / 1e6} MB\n"
         f"Peak memory      : {peek_memory / 1e6} MB\n"
     )
-    base = {"train_loss": train_loss,}
+    base = {"train_loss": train_losses,"time": times}
     savepath = f"./output/{args.dataset}/lr_{args.learning_rate}/batch_{args.per_device_train_batch_size}/{args.sortby}/layers_{args.num_layers}"
     if args.verbose:
         print(memory_string)
