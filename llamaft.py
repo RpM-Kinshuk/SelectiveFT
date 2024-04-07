@@ -385,7 +385,7 @@ def main():
         f"Total memory     : {total_memory / 1e6} MB\n"
         f"Peak memory      : {peek_memory / 1e6} MB\n"
     )
-    base = {"train_loss": train_loss,}
+    base = {"train_loss": train_losses,}
     savepath = f"./output/{args.dataset}/lr_{args.learning_rate}/batch_{args.per_device_train_batch_size}/{args.sortby}/layers_{args.num_layers}"
     if args.verbose:
         print(memory_string)
