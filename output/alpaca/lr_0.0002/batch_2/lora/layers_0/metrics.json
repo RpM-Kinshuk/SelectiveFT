@@ -1,1 +1,1 @@
-{"run_name": "./output", "eval_loss": 1.1000512838363647, "eval_runtime": 96.0324, "eval_samples_per_second": 10.413, "eval_steps_per_second": 1.302}
+{"run_name": "./output", "eval_loss": 1.0927156209945679, "eval_runtime": 61.7098, "eval_samples_per_second": 16.205, "eval_steps_per_second": 2.026}
