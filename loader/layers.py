@@ -1,7 +1,7 @@
 import pandas as pd
 import random
 
-def get_layers(args, layer_identifier='longname'):    
+def get_layers(args):    
     ww_details = pd.read_csv("llama_ww.csv")
     filtered = ww_details[  # type: ignore
         ww_details["longname"].str.contains("embed_tokens") == False  # type: ignore
@@ -10,7 +10,7 @@ def get_layers(args, layer_identifier='longname'):
     if args.num_layers > len(filtered):
         args.num_layers = len(filtered)
     if "random" in (args.sortby).lower():
-        train_names = random.sample(filtered[layer_identifier].to_list(), args.num_layers)
+        train_names = random.sample(filtered['longname'].to_list(), args.num_layers)
     else:
         if "layer" in (args.sortby).lower():
             sortby = "layer_id"
@@ -18,7 +18,7 @@ def get_layers(args, layer_identifier='longname'):
             sortby = "alpha"
         train_names = (
             filtered.sort_values(by=[sortby], ascending=args.sort_ascending)[
-                layer_identifier
+                'longname'
             ]
             .iloc[: args.num_layers]
             .to_list()
@@ -26,8 +26,7 @@ def get_layers(args, layer_identifier='longname'):
     if args.verbose:
         print("Sorted by ", sortby)
         print("Training layers:", train_names)
-    if 'alora' in args.sortby.lower():
-        return list(set(train_names))
+
     layer_to_train = []
     for layer in train_names:
         if 'ora' in args.sortby.lower():

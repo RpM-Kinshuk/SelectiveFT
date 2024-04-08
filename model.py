@@ -163,17 +163,13 @@ def get_model(args):
             modules = args.lora_modules
             if 'dora' in args.sortby.lower():
                 modules.append('lora_magnitude_vector')
-        elif 'alora' in args.sortby.lower():
-            modules = None
-            layers_to_train = get_layers(args, layer_identifier='layer_id')
         else:
-            layers_to_train = None
             modules = find_all_linear_names(args, model)
         config = LoraConfig(
             r=args.lora_r,
             lora_alpha=args.lora_alpha,
             target_modules=modules,
-            layers_to_transform=layers_to_train,
+            # layers_to_transform=layers_to_train,
             lora_dropout=args.lora_dropout,
             bias="none",
             task_type="CAUSAL_LM",
