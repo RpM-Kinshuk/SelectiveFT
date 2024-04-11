@@ -424,6 +424,27 @@ def main():
         if (args.do_train or args.do_eval or args.do_predict):
             with open(os.path.join(savepath, "metrics.json"), "w") as fout:
                 fout.write(json.dumps(all_metrics))
+        memory_dict = {
+            "total_param": param_count(model)[0],
+            "train_param": param_count(model)[1],
+            "dataset": args.dataset,
+            "method": args.sortby,
+            "layers": args.num_layers,
+            "batch_size": args.per_device_train_batch_size,
+            "lr": args.learning_rate,
+            "eval_loss": all_metrics["eval_loss"],
+            "forward_time": forward_time / 60,
+            "backward_time": backward_time / 60,
+            "weight_mem": weight_memory / 1e6,
+            "optimizer_mem": optimizer_memory / 1e6,
+            "activation_mem": activation_memory / 1e6,
+            "grad_mem": gradient_memory / 1e6,
+            "input_mem": input_memory / 1e6,
+            "total_mem": total_memory / 1e6,
+            "peak_mem": peek_memory / 1e6,
+        }
+        with open(os.path.join(savepath,'stats.json'), 'w') as json_file:
+            json.dump(memory_dict, json_file, indent=4)
 
 if __name__ == "__main__":
     main()
