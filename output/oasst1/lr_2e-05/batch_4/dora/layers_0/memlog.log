@@ -1,0 +1,21 @@
+2024-04-11 16:30:09;INFO;
+
+oasst1 Batch Size 4 dora fine-tuning 0 Layers
+2024-04-11 16:30:09;INFO;
+(6739.090944, 0.667136)
+Dataset          : oasst1
+Method           : dora
+Layers           : 0
+Batch size       : 4
+Learning Rate    : 2e-05
+Forward time     : 3.5434631228446962 min
+Backward time    : 10.875650012493134 min
+Weight memory    : 27099.117568 MB
+Optimizer memory : 5.337088 MB
+Activation memory: 8292.820992 MB
+Gradient memory  : 143.309312 MB
+Input memory     : 0.018944 MB
+Total memory     : 27245.114368 MB
+Peak memory      : 35819.019776 MB
+
+

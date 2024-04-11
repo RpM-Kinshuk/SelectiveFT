@@ -1,0 +1,19 @@
+{
+    "total_param": 6739.048448,
+    "train_param": 0.62464,
+    "dataset": "oasst1",
+    "method": "rslora",
+    "layers": 0,
+    "batch_size": 4,
+    "lr": 2e-06,
+    "eval_loss": 1.3365187644958496,
+    "forward_time": 3.3018778403600058,
+    "backward_time": 10.2875350634257,
+    "weight_mem": 27090.427904,
+    "optimizer_mem": 4.99712,
+    "activation_mem": 7948.365824,
+    "grad_mem": 151.659008,
+    "input_mem": 0.018944,
+    "total_mem": 27244.604416,
+    "peak_mem": 35474.054656
+}

@@ -1,0 +1,21 @@
+2024-04-11 15:55:59;INFO;
+
+alpaca Batch Size 4 dora fine-tuning 0 Layers
+2024-04-11 15:55:59;INFO;
+(6739.090944, 0.667136)
+Dataset          : alpaca
+Method           : dora
+Layers           : 0
+Batch size       : 4
+Learning Rate    : 2e-05
+Forward time     : 3.2619859019915265 min
+Backward time    : 7.780086942513784 min
+Weight memory    : 27099.117568 MB
+Optimizer memory : 5.337088 MB
+Activation memory: 4034.3168 MB
+Gradient memory  : 77.239296 MB
+Input memory     : 0.01024 MB
+Total memory     : 27179.035648 MB
+Peak memory      : 45859.6096 MB
+
+

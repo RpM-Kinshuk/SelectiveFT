@@ -1,0 +1,21 @@
+2024-04-11 16:59:00;INFO;
+
+oasst1 Batch Size 4 rslora fine-tuning 0 Layers
+2024-04-11 16:59:00;INFO;
+(6739.048448, 0.62464)
+Dataset          : oasst1
+Method           : rslora
+Layers           : 0
+Batch size       : 4
+Learning Rate    : 2e-06
+Forward time     : 3.3018778403600058 min
+Backward time    : 10.2875350634257 min
+Weight memory    : 27090.427904 MB
+Optimizer memory : 4.99712 MB
+Activation memory: 7948.365824 MB
+Gradient memory  : 151.659008 MB
+Input memory     : 0.018944 MB
+Total memory     : 27244.604416 MB
+Peak memory      : 35474.054656 MB
+
+
