@@ -30,9 +30,7 @@ def get_layers(args):
     layer_to_train = []
     for layer in train_names:
         if 'ora' in args.sortby.lower():
-            layer_parts = layer.split(".")
-            if len(layer_parts) > 2:
-                layer_to_train.append(int(layer_parts[2]))
+            layer_to_train.append(layer)
         else:
             layer_to_train.append(layer + ".weight")
     layer_to_train = list(set(layer_to_train))
