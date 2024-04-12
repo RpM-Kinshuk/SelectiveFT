@@ -174,6 +174,7 @@ def get_model(args):
             bias="none",
             task_type="CAUSAL_LM",
             use_dora='dora' in args.sortby.lower(),
+            use_rslora='rslora' in args.sortby.lower(),
         )
         model = get_peft_model(model, config) # type: ignore
 

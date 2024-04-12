@@ -1,0 +1,21 @@
+2024-04-11 19:25:20;INFO;
+
+oasst1 Batch Size 2 alpha fine-tuning 250 Layers
+2024-04-11 19:25:20;INFO;
+(6738.423808, 6738.423808)
+Dataset          : oasst1
+Method           : alpha
+Layers           : 250
+Batch size       : 2
+Learning Rate    : 2e-06
+Forward time     : 3.493217857678731 min
+Backward time    : 6.237894280751546 min
+Weight memory    : 28136.505344 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 5710.930944 MB
+Gradient memory  : 26039.333888 MB
+Input memory     : 0.01024 MB
+Total memory     : 81129.28256 MB
+Peak memory      : 136090.16832 MB
+
+
