@@ -16,7 +16,7 @@ from transformers import (
 import weightwatcher as ww
 from typing import Dict
 from loader.layers import get_layers
-
+from loader.alora import alora_model
 import bitsandbytes as bnb # type: ignore
 from peft import (
     prepare_model_for_kbit_training, # type: ignore
@@ -157,26 +157,33 @@ def get_model(args):
     
     # LORA INJECTION >>>-------------------------------------------->
     if 'ora' in args.sortby.lower():
+        modules = []
         model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=args.gradient_checkpointing)
         print(f'Adding {args.sortby.upper()[0]}oRA modules...')
-        if len(args.lora_modules) > 0:
-            modules = args.lora_modules
-            if 'dora' in args.sortby.lower():
-                modules.append('lora_magnitude_vector')
+        if 'adora' in args.sortby.lower() or 'alora' in args.sortby.lower():
+            layer_to_train = get_layers(args)
+            model = alora_model(args, model, layer_to_train)
         else:
-            modules = find_all_linear_names(args, model)
-        config = LoraConfig(
-            r=args.lora_r,
-            lora_alpha=args.lora_alpha,
-            target_modules=modules,
-            # layers_to_transform=layers_to_train,
-            lora_dropout=args.lora_dropout,
-            bias="none",
-            task_type="CAUSAL_LM",
-            use_dora='dora' in args.sortby.lower(),
-            use_rslora='rslora' in args.sortby.lower(),
-        )
-        model = get_peft_model(model, config) # type: ignore
+            if len(args.lora_modules) > 0:
+                modules = args.lora_modules
+                print(f'Using provided modules: {modules}')
+            else:
+                modules = find_all_linear_names(args, model)
+            if 'dora' in args.sortby.lower():
+                print('Adding DoRA module...')
+                modules.append('lora_magnitude_vector')
+            config = LoraConfig(
+                r=args.lora_r,
+                lora_alpha=args.lora_alpha,
+                target_modules=modules if len(modules) > 0 else None,
+                # layers_to_transform=layers_to_train,
+                lora_dropout=args.lora_dropout,
+                bias="none",
+                task_type="CAUSAL_LM",
+                use_dora='dora' in args.sortby.lower(),
+                use_rslora='rslora' in args.sortby.lower(),
+            )
+            model = get_peft_model(model, config) # type: ignore
 
     # SELECTIVE FINETUNING >>>-------------------------------------->
     # CHOOSING LAYERS TO TRAIN BASED ON WEIGHTWATCHER METRICS/SORTBY
