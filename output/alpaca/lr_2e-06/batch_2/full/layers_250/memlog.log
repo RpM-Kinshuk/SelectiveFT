@@ -19,3 +19,24 @@ Total memory     : 82211.423232 MB
 Peak memory      : 136197.991936 MB
 
 
+2024-04-12 11:15:30;INFO;
+
+alpaca Batch Size 2 alpha fine-tuning 250 Layers
+2024-04-12 11:15:30;INFO;
+(6738.423808, 6738.423808)
+Dataset          : alpaca
+Method           : alpha
+Layers           : 250
+Batch size       : 2
+Learning Rate    : 2e-06
+Forward time     : 20.379975112279258 min
+Backward time    : 23.189018412431082 min
+Weight memory    : 28136.505344 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 2563.783168 MB
+Gradient memory  : 26002.718208 MB
+Input memory     : 0.004608 MB
+Total memory     : 81092.923392 MB
+Peak memory      : 136208.68864 MB
+
+
