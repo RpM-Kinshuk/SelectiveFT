@@ -17,9 +17,9 @@ def alora_model(args, model, layers_to_train):
     for layer in layers_to_train:
         layer_parts = layer.split(".")
         if len(layer_parts) > 2:
-            layer_index = int(layer_parts[-2])
+            layer_index = int(layer_parts[2])
             modules = []
-            modules.append(layer_parts[-1])
+            modules.append(layer_parts[-2])
             if 'dora' in args.sortby.lower():
                 modules.append('lora_magnitude_vector')
             layer_modules.append((layer_index, modules))
