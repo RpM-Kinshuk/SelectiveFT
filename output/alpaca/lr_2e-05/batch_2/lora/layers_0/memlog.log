@@ -18,3 +18,24 @@ Total memory     : 29079.897088 MB
 Peak memory      : 43163.632128 MB
 
 
+2024-04-14 12:48:47;INFO;
+
+alpaca Batch Size 2 lora fine-tuning 0 Layers
+2024-04-14 12:48:47;INFO;
+(6758.412288, 19.98848)
+Dataset          : alpaca
+Method           : lora
+Layers           : 0
+Batch size       : 2
+Learning Rate    : 2e-05
+Forward time     : 42.008914609750114 min
+Backward time    : 41.15733851194382 min
+Weight memory    : 27167.883264 MB
+Optimizer memory : 159.90784 MB
+Activation memory: 1964.267008 MB
+Gradient memory  : 122.338816 MB
+Input memory     : 0.004608 MB
+Total memory     : 27370.180608 MB
+Peak memory      : 41854.526464 MB
+
+
