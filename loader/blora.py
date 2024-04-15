@@ -3,7 +3,7 @@ import pandas as pd
 import random
 
 def get_blocks(args):
-    ww_details = pd.read_csv("../llama_ww.csv")
+    ww_details = pd.read_csv("llama_ww.csv")
     filtered = ww_details[  # type: ignore
         ww_details["longname"].str.contains("embed_tokens|lm_head") == False
     ]
