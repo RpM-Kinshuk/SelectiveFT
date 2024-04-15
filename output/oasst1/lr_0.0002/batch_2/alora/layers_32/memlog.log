@@ -1,0 +1,21 @@
+2024-04-15 11:27:58;INFO;
+
+oasst1 Batch Size 2 alora fine-tuning 32 Layers
+2024-04-15 11:27:58;INFO;
+(6740.908032, 2.484224)
+Dataset          : oasst1
+Method           : alora
+Layers           : 32
+Batch size       : 2
+Learning Rate    : 0.0002
+Forward time     : 6.099531149864196 min
+Backward time    : 10.474469351768494 min
+Weight memory    : 27097.86624 MB
+Optimizer memory : 19.873792 MB
+Activation memory: 3678.711296 MB
+Gradient memory  : 92.771328 MB
+Input memory     : 0.01024 MB
+Total memory     : 27200.584704 MB
+Peak memory      : 31016.170496 MB
+
+
