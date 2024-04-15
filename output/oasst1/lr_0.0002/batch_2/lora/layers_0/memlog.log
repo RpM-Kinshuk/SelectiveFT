@@ -1,0 +1,21 @@
+2024-04-15 14:15:11;INFO;
+
+oasst1 Batch Size 2 lora fine-tuning 0 Layers
+2024-04-15 14:15:11;INFO;
+(6758.412288, 19.98848)
+Dataset          : oasst1
+Method           : lora
+Layers           : 0
+Batch size       : 2
+Learning Rate    : 0.0002
+Forward time     : 13.00914451678594 min
+Backward time    : 17.854150438308714 min
+Weight memory    : 27167.883264 MB
+Optimizer memory : 159.90784 MB
+Activation memory: 5201.08288 MB
+Gradient memory  : 162.788352 MB
+Input memory     : 0.01024 MB
+Total memory     : 27410.635776 MB
+Peak memory      : 32751.473152 MB
+
+
