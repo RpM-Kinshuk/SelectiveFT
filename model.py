@@ -17,6 +17,7 @@ import weightwatcher as ww
 from typing import Dict
 from loader.layers import get_layers
 from loader.alora import alora_model
+from loader.blora import get_blocks
 import bitsandbytes as bnb # type: ignore
 from peft import (
     prepare_model_for_kbit_training, # type: ignore
@@ -157,7 +158,7 @@ def get_model(args):
     
     # LORA INJECTION >>>-------------------------------------------->
     if 'ora' in args.sortby.lower():
-        modules = []
+        modules = None
         model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=args.gradient_checkpointing)
         print(f'Adding {args.sortby.upper()[0]}oRA modules...')
         if 'adora' in args.sortby.lower() or 'alora' in args.sortby.lower():
@@ -172,11 +173,14 @@ def get_model(args):
             if 'dora' in args.sortby.lower():
                 print('Adding DoRA module...')
                 modules.append('lora_magnitude_vector')
+            blocks_to_train = None
+            if 'blora' in args.sortby.lower():
+                blocks_to_train = get_blocks(args)
             config = LoraConfig(
                 r=args.lora_r,
                 lora_alpha=args.lora_alpha,
-                target_modules=modules if len(modules) > 0 else None,
-                # layers_to_transform=layers_to_train,
+                target_modules=modules,
+                layers_to_transform=blocks_to_train,
                 lora_dropout=args.lora_dropout,
                 bias="none",
                 task_type="CAUSAL_LM",
