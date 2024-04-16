@@ -12,6 +12,7 @@ def alora_model(args, model, layers_to_train):
     print("Using ALORA")
     print("Layers to train: ", layers_to_train)
     adapter_list = []
+    layer_list = set()
     layer_modules = []
     modules = []
     for layer in layers_to_train:
@@ -20,8 +21,9 @@ def alora_model(args, model, layers_to_train):
             layer_index = int(layer_parts[2])
             modules = []
             modules.append(layer_parts[-2])
-            if 'dora' in args.sortby.lower():
+            if 'dora' in args.sortby.lower() and layer_index not in layer_list:
                 modules.append('lora_magnitude_vector')
+            layer_list.add(layer_index)
             layer_modules.append((layer_index, modules))
     for step, (layer_index, modules) in enumerate(layer_modules):
         config = LoraConfig(
