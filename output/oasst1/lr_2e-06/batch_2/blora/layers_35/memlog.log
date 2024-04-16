@@ -1,0 +1,21 @@
+2024-04-15 16:12:01;INFO;
+
+oasst1 Batch Size 2 blora fine-tuning 35 Layers
+2024-04-15 16:12:01;INFO;
+(6741.547008, 3.1232)
+Dataset          : oasst1
+Method           : blora
+Layers           : 35
+Batch size       : 2
+Learning Rate    : 2e-06
+Forward time     : 7.037399566173553 min
+Backward time    : 8.68985622326533 min
+Weight memory    : 27100.422144 MB
+Optimizer memory : 24.9856 MB
+Activation memory: 1586.834944 MB
+Gradient memory  : 95.327232 MB
+Input memory     : 0.01024 MB
+Total memory     : 27208.252416 MB
+Peak memory      : 28934.841856 MB
+
+

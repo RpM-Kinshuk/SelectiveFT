@@ -1,0 +1,21 @@
+2024-04-15 16:30:10;INFO;
+
+alpaca Batch Size 2 blora fine-tuning 35 Layers
+2024-04-15 16:30:10;INFO;
+(6741.547008, 3.1232)
+Dataset          : alpaca
+Method           : blora
+Layers           : 5
+Batch size       : 2
+Learning Rate    : 2e-05
+Forward time     : 21.036099270979562 min
+Backward time    : 17.009532558918 min
+Weight memory    : 27100.422144 MB
+Optimizer memory : 24.9856 MB
+Activation memory: 1191.098368 MB
+Gradient memory  : 78.430208 MB
+Input memory     : 0.006656 MB
+Total memory     : 27191.351808 MB
+Peak memory      : 31941.050368 MB
+
+
