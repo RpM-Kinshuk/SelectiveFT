@@ -1,0 +1,21 @@
+2024-04-16 19:51:29;INFO;
+
+hh-rlhf Batch Size 2 lora fine-tuning 0 Layers
+2024-04-16 19:51:29;INFO;
+(6758.412288, 19.98848)
+Dataset          : hh-rlhf
+Method           : lora
+Layers           : 0
+Batch size       : 2
+Learning Rate    : 0.0002
+Forward time     : 232.0612239122391 min
+Backward time    : 206.90972949266433 min
+Weight memory    : 27167.883264 MB
+Optimizer memory : 159.90784 MB
+Activation memory: 1793.151488 MB
+Gradient memory  : 120.290816 MB
+Input memory     : 0.003584 MB
+Total memory     : 27368.131584 MB
+Peak memory      : 32751.473152 MB
+
+
