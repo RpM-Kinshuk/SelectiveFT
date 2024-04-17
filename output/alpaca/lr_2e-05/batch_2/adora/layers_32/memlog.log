@@ -1,0 +1,21 @@
+2024-04-16 18:56:21;INFO;
+
+alpaca Batch Size 2 adora fine-tuning 32 Layers
+2024-04-16 18:56:21;INFO;
+(6741.073664, 2.649856)
+Dataset          : alpaca
+Method           : adora
+Layers           : 32
+Batch size       : 2
+Learning Rate    : 2e-05
+Forward time     : 27.76094066699346 min
+Backward time    : 48.850587113698325 min
+Weight memory    : 27107.048448 MB
+Optimizer memory : 21.198848 MB
+Activation memory: 1638.173184 MB
+Gradient memory  : 44.20864 MB
+Input memory     : 0.004608 MB
+Total memory     : 27161.86112 MB
+Peak memory      : 39318.035968 MB
+
+
