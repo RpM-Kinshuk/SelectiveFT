@@ -1,5 +1,8 @@
-import pandas as pd
+import os
+import torch
 import random
+import pandas as pd
+from collections import defaultdict
 
 def get_layers(args):    
     ww_details = pd.read_csv("llama_ww.csv")
@@ -33,6 +36,21 @@ def get_layers(args):
     layer_to_train = list(set(layer_to_train))
     return layer_to_train
 
+def save_layer_log(args, model, savepath):
+    if not args.debug and "lora" not in args.sortby.lower():
+        # Saving Details of Frozen Layers
+        freeze_dict = None
+        freeze_dict = defaultdict(list)
+        for name, param in model.named_parameters():
+            freeze_dict["name"].append(name)
+            if param.grad is None:
+                freeze_dict["freeze_layer"].append(True)
+            elif torch.sum(param.grad.abs()).item() > 0:
+                freeze_dict["freeze_layer"].append(False)
+        if freeze_dict is not None:
+            pd.DataFrame(freeze_dict).to_csv(
+                os.path.join(savepath, f"freeze.csv")
+            )
 
 def param_count(m):
     params = sum([p.numel() for p in m.parameters()])/1_000_000
