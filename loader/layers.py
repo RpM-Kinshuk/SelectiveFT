@@ -36,8 +36,8 @@ def get_layers(args):
     layer_to_train = list(set(layer_to_train))
     return layer_to_train
 
-def save_layer_log(args, model, savepath):
-    if not args.debug and "lora" not in args.sortby.lower():
+def layer_log(args, model, savepath):
+    if not args.debug:
         # Saving Details of Frozen Layers
         freeze_dict = None
         freeze_dict = defaultdict(list)
