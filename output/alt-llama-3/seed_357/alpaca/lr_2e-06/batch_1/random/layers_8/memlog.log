@@ -1,0 +1,21 @@
+2024-05-11 03:23:35;INFO;
+
+alpaca Batch Size 1 random fine-tuning 8 Layers
+2024-05-11 03:23:35;INFO;
+(8030.26944, 360.710144)
+Dataset          : alpaca
+Method           : random
+Layers           : 8
+Batch size       : 1
+Learning Rate    : 2e-06
+Forward time     : 32.30170285304387 min
+Backward time    : 51.70299431880315 min
+Weight memory    : 32389.5296 MB
+Optimizer memory : 2885.681152 MB
+Activation memory: 468.44672 MB
+Gradient memory  : 1488.610304 MB
+Input memory     : 0.001536 MB
+Total memory     : 35320.982016 MB
+Peak memory      : 41349.97504 MB
+
+
