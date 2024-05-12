@@ -1,0 +1,21 @@
+2024-05-02 15:51:44;INFO;
+
+alpaca Batch Size 1 lora fine-tuning 0 Layers
+2024-05-02 15:51:44;INFO;
+(8051.24096, 20.97152)
+Dataset          : alpaca
+Method           : lora
+Layers           : 0
+Batch size       : 1
+Learning Rate    : 2e-05
+Forward time     : 70.60305432478587 min
+Backward time    : 94.49510159492493 min
+Weight memory    : 32473.41568 MB
+Optimizer memory : 167.77216 MB
+Activation memory: 718.661632 MB
+Gradient memory  : 129.142784 MB
+Input memory     : 0.001536 MB
+Total memory     : 32686.44608 MB
+Peak memory      : 42536.12544 MB
+
+

@@ -1,0 +1,21 @@
+2024-05-02 19:02:59;INFO;
+
+alpaca Batch Size 1 alora fine-tuning 64 Layers
+2024-05-02 19:02:59;INFO;
+(8036.683776, 6.414336)
+Dataset          : alpaca
+Method           : alora
+Layers           : 64
+Batch size       : 1
+Learning Rate    : 2e-05
+Forward time     : 54.71430216232935 min
+Backward time    : 69.30340370734532 min
+Weight memory    : 32415.186944 MB
+Optimizer memory : 51.314688 MB
+Activation memory: 1310.278656 MB
+Gradient memory  : 101.182464 MB
+Input memory     : 0.00256 MB
+Total memory     : 32542.029312 MB
+Peak memory      : 40901.668864 MB
+
+
