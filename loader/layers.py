@@ -4,8 +4,14 @@ import random
 import pandas as pd
 from collections import defaultdict
 
-def get_layers(args):    
-    ww_details = pd.read_csv("llama_ww.csv")
+def get_layers(args):
+    modif = 'None'
+    if 'mid' in args.sortby:
+        modif = 'mid'
+    elif 'peak' in args.sortby:
+        modif = 'peak'
+    print(f"Using esd_{modif}.csv with {args.sortby}|{args.sort_ascending} layer-selection")
+    ww_details = pd.read_csv(os.path.join('output', args.model_name_or_path, f"esd_{modif}.csv"))
     filtered = ww_details[  # type: ignore
         ww_details["longname"].str.contains("embed_tokens") == False  # type: ignore
     ]
