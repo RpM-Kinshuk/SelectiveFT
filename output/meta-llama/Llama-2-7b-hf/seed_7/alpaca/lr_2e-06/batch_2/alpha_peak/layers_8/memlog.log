@@ -1,0 +1,21 @@
+2024-05-13 08:36:25;INFO;
+
+alpaca Batch Size 2 alpha_peak fine-tuning 8 Layers
+2024-05-13 08:36:25;INFO;
+(6738.423808, 219.152384)
+Dataset          : alpaca
+Method           : alpha_peak
+Layers           : 8
+Batch size       : 2
+Learning Rate    : 2e-06
+Forward time     : 13.225728289286296 min
+Backward time    : 17.460379083951313 min
+Weight memory    : 27087.929344 MB
+Optimizer memory : 1753.219072 MB
+Activation memory: 698.271744 MB
+Gradient memory  : 923.090432 MB
+Input memory     : 0.004608 MB
+Total memory     : 28887.63392 MB
+Peak memory      : 33572.012032 MB
+
+

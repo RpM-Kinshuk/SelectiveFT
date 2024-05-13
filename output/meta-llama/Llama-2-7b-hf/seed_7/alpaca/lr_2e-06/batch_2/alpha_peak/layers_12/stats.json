@@ -1,0 +1,19 @@
+{
+    "total_param": 6738.423808,
+    "train_param": 342.884352,
+    "dataset": "alpaca",
+    "method": "alpha_peak",
+    "layers": 12,
+    "batch_size": 2,
+    "lr": 2e-06,
+    "eval_loss": 1.049220323562622,
+    "forward_time": 18.211578694979348,
+    "backward_time": 36.77779244979222,
+    "weight_mem": 27087.929344,
+    "optimizer_mem": 2743.074816,
+    "activation_mem": 1539.894784,
+    "grad_mem": 1418.911232,
+    "input_mem": 0.004608,
+    "total_mem": 29877.700608,
+    "peak_mem": 39689.501184
+}
