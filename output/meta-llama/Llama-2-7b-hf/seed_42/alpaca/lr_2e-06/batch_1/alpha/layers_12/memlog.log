@@ -1,0 +1,42 @@
+2024-05-17 13:21:53;INFO;
+
+alpaca Batch Size 1 alpha fine-tuning 12 Layers
+2024-05-17 13:21:53;INFO;
+(6738.423808, 229.638144)
+Dataset          : alpaca
+Method           : alpha
+Layers           : 12
+Batch size       : 1
+Learning Rate    : 2e-06
+Forward time     : 41.05005042155584 min
+Backward time    : 57.82435785929362 min
+Weight memory    : 27087.929344 MB
+Optimizer memory : 1837.105152 MB
+Activation memory: 851.158016 MB
+Gradient memory  : 949.54496 MB
+Input memory     : 0.00256 MB
+Total memory     : 28956.02944 MB
+Peak memory      : 35945.247232 MB
+
+
+2024-05-17 19:51:11;INFO;
+
+alpaca Batch Size 1 alpha fine-tuning 12 Layers
+2024-05-17 19:51:11;INFO;
+(6738.423808, 229.638144)
+Dataset          : alpaca
+Method           : alpha
+Layers           : 12
+Batch size       : 1
+Learning Rate    : 2e-06
+Forward time     : 42.0445828239123 min
+Backward time    : 58.38190985123317 min
+Weight memory    : 27087.929344 MB
+Optimizer memory : 1837.105152 MB
+Activation memory: 851.158016 MB
+Gradient memory  : 949.54496 MB
+Input memory     : 0.00256 MB
+Total memory     : 28956.02944 MB
+Peak memory      : 35945.247232 MB
+
+

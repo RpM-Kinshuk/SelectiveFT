@@ -1,0 +1,1 @@
+{"run_name": "./output/meta-llama/Llama-2-7b-hf/seed_43", "eval_loss": 1.0627599954605103, "eval_runtime": 67.5596, "eval_samples_per_second": 14.802, "eval_steps_per_second": 1.85}
