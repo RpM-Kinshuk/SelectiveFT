@@ -13,7 +13,7 @@ def get_layers(args):
     print(f"Using {args.model_name_or_path}/esd_{modif}.csv with {args.sortby}|Descending:{args.sort_ascending} layer-selection")
     ww_details = pd.read_csv(os.path.join('output', args.model_name_or_path, f"esd_{modif}.csv"))
     filtered = ww_details[  # type: ignore
-        ww_details["longname"].str.contains("embed_tokens") == False  # type: ignore
+        ww_details["longname"].str.contains("lm_head|embed_tokens") == False  # type: ignore
     ]
     sortby = "random"
     if args.num_layers > len(filtered):
