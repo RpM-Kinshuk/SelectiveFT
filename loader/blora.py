@@ -1,9 +1,16 @@
-from types import SimpleNamespace
-import pandas as pd
+import os
 import random
+import pandas as pd
+from types import SimpleNamespace
 
 def get_blocks(args):
-    ww_details = pd.read_csv("llama_ww.csv")
+    modif = 'None'
+    if 'mid' in args.sortby:
+        modif = 'mid'
+    elif 'peak' in args.sortby:
+        modif = 'peak'
+    print(f"Using {args.model_name_or_path}/esd_{modif}.csv with {args.sortby}|Descending:{args.sort_ascending} layer-selection")
+    ww_details = pd.read_csv(os.path.join('output', args.model_name_or_path, f"esd_{modif}.csv"))
     filtered = ww_details[  # type: ignore
         ww_details["longname"].str.contains("embed_tokens|lm_head") == False
     ]
