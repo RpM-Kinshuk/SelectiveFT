@@ -175,7 +175,7 @@ def get_model(args):
                 modules.append('lora_magnitude_vector')
             blocks_to_train = None
             if 'blora' in args.sortby.lower():
-                blocks_to_train = get_blocks(args)
+                blocks_to_train, _ = get_blocks(args)
             config = LoraConfig(
                 r=args.lora_r,
                 lora_alpha=args.lora_alpha,
@@ -192,14 +192,17 @@ def get_model(args):
     # SELECTIVE FINETUNING >>>-------------------------------------->
     # CHOOSING LAYERS TO TRAIN BASED ON WEIGHTWATCHER METRICS/SORTBY
     if "ora" not in args.sortby.lower():
-        layer_to_train = get_layers(args)
-        # print("Final Training layers:", layer_to_train)
+        layer_to_train = None
+        if 'block' in args.sortby.lower():
+            _, layer_to_train = get_blocks(args)
+        else:
+            layer_to_train = get_layers(args)
         for name, param in model.named_parameters():
             if name in layer_to_train:
                 param.requires_grad = True
                 if args.verbose:
                     print(f"Enabling {name} parameter")
-    
+        
     for name, module in model.named_modules():
         if isinstance(module, LoraLayer):
             if args.bf16:

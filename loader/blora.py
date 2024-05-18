@@ -34,4 +34,12 @@ def get_blocks(args):
     # print(sorted_blocks)
     blocks_to_train = [x[0] for x in sorted_blocks[:args.num_layers]]
     blocks_to_train = list(set(blocks_to_train))
-    return blocks_to_train
+    layers_to_train = []
+    for layer in all_layers:
+        split = layer.split(".")
+        if len(split) < 4:
+            continue
+        if split[2] in [str(x) for x in blocks_to_train]:
+            layers_to_train.append(layer + ".weight")
+    print(f"Training layers:", layers_to_train)
+    return blocks_to_train, layers_to_train
