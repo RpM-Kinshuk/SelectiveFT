@@ -32,7 +32,8 @@ def get_blocks(args):
     if 'random' in args.sortby.lower():
         random.shuffle(sorted_blocks)
     # print(sorted_blocks)
-    blocks_to_train = [x[0] for x in sorted_blocks[:args.num_layers]]
+    num_blocks = args.num_layers//7
+    blocks_to_train = [x[0] for x in sorted_blocks[:num_blocks]]
     blocks_to_train = list(set(blocks_to_train))
     layers_to_train = []
     for layer in all_layers:
