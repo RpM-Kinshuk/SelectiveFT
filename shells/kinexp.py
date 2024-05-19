@@ -31,7 +31,7 @@ for num_layers, max_steps, sortby, seed in itertools.product(num_layers_list, ma
     save_path = f"./results/{model_name_or_path}/seed_{seed}"
 
     cmd = (
-        "OMP_NUM_THREADS=1 python /jumbo/yaoqingyang/LlaMAft/selft.py "
+        "OMP_NUM_THREADS=1 python /jumbo/yaoqingyang/kinshuk/LlaMAft/selft.py "
         f"--seed {seed} "
         f"--data_seed 7 "
         f"--output_dir {save_path} "
