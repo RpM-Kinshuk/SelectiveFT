@@ -1,5 +1,5 @@
-cachedir = '/rscratch/tpang/kinshuk/cache'
-# cachedir = '/scratch/vipul/cache'
+# cachedir = '/rscratch/tpang/kinshuk/cache'
+cachedir = '/scratch/kinshuk/cache'
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "7"
 os.environ["TRANSFORMERS_CACHE"] = cachedir
@@ -49,21 +49,18 @@ import gpustat
 
 AVAILABLE_GPUS = [7]
 
-# time.sleep(4000)
-sd = 43
+time.sleep(3600)
+sd = 73
 
+# model_name = 'meta-llama/Llama-2-7b-hf'
 model_name = 'meta-llama/Meta-Llama-3-8B'
-model_name = 'meta-llama/Llama-2-7b-hf'
 
 model_args = ModelArguments(
     model_name_or_path=model_name
 )
 
 data_args = DataArguments(
-    eval_dataset_size=1024,
     max_eval_samples=1000,
-    source_max_len = 1024,
-    target_max_len = 256,
     dataset="alpaca", # DATASET [alpaca|chip2|self-instruct|hh-rlhf|oasst1|longform]
 )
 
@@ -71,19 +68,16 @@ training_args = TrainingArguments(
     seed = sd,
     output_dir=f"./results/{model_name}/seed_{sd}",
     data_seed=7,
-    save_strategy="steps",
     evaluation_strategy="steps",
-    logging_strategy="steps",
     do_eval=True,
     eval_steps=200,
-    adam_beta2=0.999,
     freeze = True,
 
     learning_rate=2e-6,     # LEARNING RATE
     
     max_steps=22500,       # NUMBER OF STEPS
 
-    sortby="random",        # CAN DO "alpha" or "lora" or "dora"
+    sortby="block_random",        # CAN DO "alpha" or "lora" or "dora"
 
     num_layers=14,           # NUMBER OF LAYERS FOR FULL FINE-TUNING
 
@@ -91,19 +85,13 @@ training_args = TrainingArguments(
     memlog=True,
 )
 
-generation_args = GenerationArguments(
-    max_new_tokens=256 # default is 256
-)
+generation_args = GenerationArguments()
 
 # If you need to use GenerationConfig or similar for generation_args
-training_args.generation_config = transformers.GenerationConfig(
-    **vars(generation_args)
-)
+training_args.generation_config = transformers.GenerationConfig(**vars(generation_args))
 
 # Combine arguments into a single Namespace object (if needed)
-args = argparse.Namespace(
-    **vars(model_args), **vars(data_args), **vars(training_args),
-)
+args = argparse.Namespace(**vars(model_args), **vars(data_args), **vars(training_args))
 args.cache_dir=cachedir
 
 gs = 0
@@ -298,7 +286,7 @@ memory_string = (
 print(memory_string)
 
 # SAVE TRAINING HISTORY
-base = {"train_loss": train_losses, "val_loss": val_losses, "val_acc": val_accs, "times": times}
+base = {"train_loss": train_losses, "val_loss": val_losses, "val_acc": val_accs, "time": times}
 if args.memlog:
     Path(savepath).mkdir(parents=True, exist_ok=True)
     np.save(os.path.join(savepath, "finetune.npy"), base) # type: ignore
