@@ -2,6 +2,7 @@
 cachedir = '/scratch/kinshuk/cache'
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["HF_HOME"] = cachedir
 os.environ["TRANSFORMERS_CACHE"] = cachedir
 os.environ["HF_DATASETS_CACHE"]= cachedir
 from model import get_model
