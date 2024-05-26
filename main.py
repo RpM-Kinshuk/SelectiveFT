@@ -64,7 +64,7 @@ data_args = DataArguments(
 
 training_args = TrainingArguments(
     seed = sd,
-    output_dir=f"./results",
+    output_dir=f"./final",
     data_seed=7,
     evaluation_strategy="steps",
     do_eval=True,
@@ -263,7 +263,7 @@ def main():
         args.sortby, 
         f"layers_{args.num_layers}"
     )
-    savepath = f"./tmp/{args.model_name_or_path}/seed_{args.seed}/{args.dataset}/lr_{args.learning_rate}/batch_{args.per_device_train_batch_size}/{args.sortby}/layers_{args.num_layers}"
+    savepath = f"{args.output_dir}/{args.model_name_or_path}/seed_{args.seed}/{args.dataset}/lr_{args.learning_rate}/batch_{args.per_device_train_batch_size}/{args.sortby}/layers_{args.num_layers}"
     Path(savepath).mkdir(parents=True, exist_ok=True)
 
     model, tokenizer = get_model(args)
