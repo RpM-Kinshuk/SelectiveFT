@@ -226,7 +226,7 @@ def train(args, model, tokenizer, train_dataloader, eval_dataloader, data_module
     if args.do_eval:
         all_metrics = eval_func(args, logger, trainer, all_metrics)
 
-    base = {"train_loss": train_losses, "val_loss": val_losses, "val_acc": val_accs, "times": times}
+    base = {"train_loss": train_losses, "val_loss": val_losses, "val_acc": val_accs, "time": times}
     memory_dict = {
         "total_param": param_count(model)[0],
         "train_param": param_count(model)[1],
