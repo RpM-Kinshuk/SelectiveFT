@@ -1,0 +1,23 @@
+2024-05-30 00:13:10;INFO;
+
+self-instruct Batch Size 1 random fine-tuning 14 Layers
+2024-05-30 00:13:10;INFO;
+Total param      : 6738.423808
+Train param      : 433.061888
+Dataset          : self-instruct
+Method           : random
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 0.5807477831840515
+Forward time     : 18.270963621139526 min
+Backward time    : 19.921603258450826 min
+Weight memory    : 27087.929344 MB
+Optimizer memory : 3464.495104 MB
+Activation memory: 520.2877432771764 MB
+Gradient memory  : 1758.069743716392 MB
+Input memory     : 0.0020365753725490195 MB
+Total memory     : 32312.386048 MB
+Peak memory      : 34184.54272 MB
+
+

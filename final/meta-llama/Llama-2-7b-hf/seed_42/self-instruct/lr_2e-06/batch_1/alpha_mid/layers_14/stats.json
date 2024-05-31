@@ -1,0 +1,19 @@
+{
+    "total_param": 6738.423808,
+    "train_param": 631.242752,
+    "dataset": "self-instruct",
+    "method": "alpha_mid",
+    "layers": 14,
+    "batch_size": 1,
+    "lr": 2e-06,
+    "eval_loss": 0.5563359260559082,
+    "forward_time": 19.469784712791444,
+    "backward_time": 19.84574637413025,
+    "weight_mem": 27087.929344,
+    "optimizer_mem": 5049.942016,
+    "activation_mem": 515.8312833305098,
+    "grad_mem": 2550.777085952,
+    "input_mem": 0.0020365753725490195,
+    "total_mem": 34689.741312,
+    "peak_mem": 37262.336
+}

@@ -1,0 +1,23 @@
+2024-05-29 20:33:24;INFO;
+
+self-instruct Batch Size 1 alpha_ww fine-tuning 14 Layers
+2024-05-29 20:33:24;INFO;
+Total param      : 6738.423808
+Train param      : 291.504128
+Dataset          : self-instruct
+Method           : alpha_ww
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 0.5906981229782104
+Forward time     : 17.421453336874645 min
+Backward time    : 18.365776105721793 min
+Weight memory    : 27087.929344 MB
+Optimizer memory : 2332.033024 MB
+Activation memory: 466.53509111968623 MB
+Gradient memory  : 1191.840396107294 MB
+Input memory     : 0.0020365753725490195 MB
+Total memory     : 30613.765632 MB
+Peak memory      : 32695.557632 MB
+
+

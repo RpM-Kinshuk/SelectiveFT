@@ -1,0 +1,23 @@
+2024-05-28 19:37:03;INFO;
+
+hh-rlhf Batch Size 1 alpha_mid fine-tuning 14 Layers
+2024-05-28 19:37:03;INFO;
+Total param      : 6738.423808
+Train param      : 631.242752
+Dataset          : hh-rlhf
+Method           : alpha_mid
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 1.4346745014190674
+Forward time     : 14.463942217826844 min
+Backward time    : 35.440646696090695 min
+Weight memory    : 27087.929344 MB
+Optimizer memory : 5049.942016 MB
+Activation memory: 1381.4224146472156 MB
+Gradient memory  : 2565.362991244549 MB
+Input memory     : 0.0040967027450980395 MB
+Total memory     : 34696.526848 MB
+Peak memory      : 37238.413312 MB
+
+

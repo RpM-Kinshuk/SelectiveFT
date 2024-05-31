@@ -1,0 +1,23 @@
+2024-05-30 20:24:37;INFO;
+
+self-instruct Batch Size 1 alpha_peak fine-tuning 14 Layers
+2024-05-30 20:24:37;INFO;
+Total param      : 6738.423808
+Train param      : 433.061888
+Dataset          : self-instruct
+Method           : alpha_peak
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 0.5857951045036316
+Forward time     : 18.03766995271047 min
+Backward time    : 19.004221765200295 min
+Weight memory    : 27087.929344 MB
+Optimizer memory : 3464.495104 MB
+Activation memory: 487.1059981452549 MB
+Gradient memory  : 1758.0645998230589 MB
+Input memory     : 0.0020365753725490195 MB
+Total memory     : 32311.570944 MB
+Peak memory      : 34091.442176 MB
+
+

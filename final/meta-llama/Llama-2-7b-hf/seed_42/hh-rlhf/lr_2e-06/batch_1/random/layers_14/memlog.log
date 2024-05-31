@@ -1,0 +1,23 @@
+2024-05-28 19:24:02;INFO;
+
+hh-rlhf Batch Size 1 random fine-tuning 14 Layers
+2024-05-28 19:24:02;INFO;
+Total param      : 6738.423808
+Train param      : 433.061888
+Dataset          : hh-rlhf
+Method           : random
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 1.4467039108276367
+Forward time     : 13.887323963642121 min
+Backward time    : 35.98866058985392 min
+Weight memory    : 27087.929344 MB
+Optimizer memory : 3464.495104 MB
+Activation memory: 1393.6426243011765 MB
+Gradient memory  : 1772.77648038651 MB
+Input memory     : 0.0040967027450980395 MB
+Total memory     : 32319.005696 MB
+Peak memory      : 34068.785664 MB
+
+

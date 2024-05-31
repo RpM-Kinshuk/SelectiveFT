@@ -1,0 +1,23 @@
+2024-05-26 06:20:27;INFO;
+
+alpaca Batch Size 1 alpha fine-tuning 14 Layers
+2024-05-26 06:20:27;INFO;
+Total param      : 8030.26944
+Train param      : 331.350016
+Dataset          : alpaca
+Method           : alpha
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 1.1745266914367676
+Forward time     : 20.875289519627888 min
+Backward time    : 33.29522107839584 min
+Weight memory    : 32389.5296 MB
+Optimizer memory : 2651.619328 MB
+Activation memory: 1008.4507578528627 MB
+Gradient memory  : 1395.9739747589022 MB
+Input memory     : 0.0026739049411764705 MB
+Total memory     : 36448.745984 MB
+Peak memory      : 42001.040384 MB
+
+

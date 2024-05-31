@@ -1,0 +1,19 @@
+{
+    "total_param": 6738.423808,
+    "train_param": 291.504128,
+    "dataset": "hh-rlhf",
+    "method": "alpha",
+    "layers": 14,
+    "batch_size": 1,
+    "lr": 2e-06,
+    "eval_loss": 1.4500566720962524,
+    "forward_time": 14.220460430781047,
+    "backward_time": 32.80117155313492,
+    "weight_mem": 27087.929344,
+    "optimizer_mem": 2332.033024,
+    "activation_mem": 1249.959416932392,
+    "grad_mem": 1206.6776859708236,
+    "input_mem": 0.0040967027450980395,
+    "total_mem": 30619.66336,
+    "peak_mem": 31804.143616
+}

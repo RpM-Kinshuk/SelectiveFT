@@ -1,0 +1,23 @@
+2024-05-28 12:13:25;INFO;
+
+oasst1 Batch Size 1 random fine-tuning 14 Layers
+2024-05-28 12:13:25;INFO;
+Total param      : 6738.423808
+Train param      : 433.061888
+Dataset          : oasst1
+Method           : random
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 1.2626930475234985
+Forward time     : 4.729514086246491 min
+Backward time    : 14.415500986576081 min
+Weight memory    : 27087.929344 MB
+Optimizer memory : 3464.495104 MB
+Activation memory: 1692.2267091712959 MB
+Gradient memory  : 1777.8624963809093 MB
+Input memory     : 0.0048683242262781996 MB
+Total memory     : 32334.61504 MB
+Peak memory      : 34068.785664 MB
+
+

@@ -1,0 +1,23 @@
+2024-05-28 21:59:17;INFO;
+
+chip2 Batch Size 1 alpha_mid fine-tuning 14 Layers
+2024-05-28 21:59:17;INFO;
+Total param      : 6738.423808
+Train param      : 631.242752
+Dataset          : chip2
+Method           : alpha_mid
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 1.0052533149719238
+Forward time     : 15.47176723877589 min
+Backward time    : 25.088403729597726 min
+Weight memory    : 27087.929344 MB
+Optimizer memory : 5049.942016 MB
+Activation memory: 734.4323241461962 MB
+Gradient memory  : 2554.4453724561567 MB
+Input memory     : 0.002540503843137255 MB
+Total memory     : 34693.453312 MB
+Peak memory      : 37250.94144 MB
+
+

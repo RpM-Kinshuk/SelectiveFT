@@ -1,0 +1,23 @@
+2024-05-29 20:55:38;INFO;
+
+chip2 Batch Size 1 random fine-tuning 14 Layers
+2024-05-29 20:55:38;INFO;
+Total param      : 6738.423808
+Train param      : 433.061888
+Dataset          : chip2
+Method           : random
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 1.0219502449035645
+Forward time     : 15.350788366794585 min
+Backward time    : 25.075840079784392 min
+Weight memory    : 27087.929344 MB
+Optimizer memory : 3464.495104 MB
+Activation memory: 740.4824487253334 MB
+Gradient memory  : 1761.747133158902 MB
+Input memory     : 0.002540503843137255 MB
+Total memory     : 32315.282944 MB
+Peak memory      : 34080.103424 MB
+
+
