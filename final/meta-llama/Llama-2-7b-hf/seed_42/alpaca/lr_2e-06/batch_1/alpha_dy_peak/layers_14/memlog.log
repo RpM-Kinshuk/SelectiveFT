@@ -1,0 +1,23 @@
+2024-05-31 21:21:01;INFO;
+
+alpaca Batch Size 1 alpha_dy_peak fine-tuning 14 Layers
+2024-05-31 21:21:01;INFO;
+Total param      : 6738.423808
+Train param      : 461.37344
+Dataset          : alpaca
+Method           : alpha_dy_peak
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 1.0574114322662354
+Forward time     : 13.067744851112366 min
+Backward time    : 27.79869062503179 min
+Weight memory    : 26953.711616 MB
+Optimizer memory : 3464.495104 MB
+Activation memory: 904.3165124166275 MB
+Gradient memory  : 3422.189341595608 MB
+Input memory     : 0.0030693898039215687 MB
+Total memory     : 35135.422464 MB
+Peak memory      : 37413.92896 MB
+
+
