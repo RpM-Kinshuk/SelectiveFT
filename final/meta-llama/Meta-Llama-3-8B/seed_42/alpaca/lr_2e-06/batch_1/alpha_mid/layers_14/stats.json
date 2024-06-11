@@ -6,14 +6,14 @@
     "layers": 14,
     "batch_size": 1,
     "lr": 2e-06,
-    "eval_loss": 1.1725198030471802,
-    "forward_time": 15.683315074443817,
-    "backward_time": 35.655548532803856,
-    "weight_mem": 32121.094144,
+    "eval_loss": 1.1735061407089233,
+    "forward_time": 22.44379427830378,
+    "backward_time": 34.56775093475978,
+    "weight_mem": 32389.5296,
     "optimizer_mem": 3959.422976,
-    "activation_mem": 970.3667948724706,
-    "grad_mem": 2050.267042615216,
+    "activation_mem": 1079.6379227758432,
+    "grad_mem": 2050.261577446902,
     "input_mem": 0.0026739049411764705,
-    "total_mem": 38142.4256,
-    "peak_mem": 42010.696704
+    "total_mem": 38410.861056,
+    "peak_mem": 43740.670976
 }

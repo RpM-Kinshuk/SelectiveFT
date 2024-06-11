@@ -1,7 +1,7 @@
-2024-05-31 20:18:03;INFO;
+2024-06-01 19:45:36;INFO;
 
 alpaca Batch Size 1 random fine-tuning 14 Layers
-2024-05-31 20:18:03;INFO;
+2024-06-01 19:45:36;INFO;
 Total param      : 8030.26944
 Train param      : 490.733568
 Dataset          : alpaca
@@ -9,15 +9,15 @@ Method           : random
 Layers           : 14
 Batch size       : 1
 Learning Rate    : 2e-06
-Eval Loss        : 1.1680281162261963
-Forward time     : 15.718751211961111 min
-Backward time    : 36.23320174614589 min
-Weight memory    : 32121.094144 MB
-Optimizer memory : 3926.540288 MB
-Activation memory: 973.2839784608627 MB
-Gradient memory  : 2033.5053215422745 MB
+Eval Loss        : 1.1682158708572388
+Forward time     : 23.002895291646322 min
+Backward time    : 35.97689418792724 min
+Weight memory    : 32389.5296 MB
+Optimizer memory : 3925.868544 MB
+Activation memory: 1082.9310955118433 MB
+Gradient memory  : 2033.5182336401567 MB
 Input memory     : 0.0026739049411764705 MB
-Total memory     : 38092.765696 MB
-Peak memory      : 41993.427968 MB
+Total memory     : 38360.529408 MB
+Peak memory      : 46970.623488 MB
 
 
