@@ -4,7 +4,7 @@ import random
 import pandas as pd
 from collections import defaultdict
 
-def get_layers(args):
+def get_layers(args, predefined_ww=None):
     modif = 'None'
     if 'mid' in args.sortby:
         modif = 'mid'
@@ -12,6 +12,8 @@ def get_layers(args):
         modif = 'peak'
     print(f"Using {args.model_name_or_path}/esd_{modif}.csv with {args.sortby}|Descending:{args.sort_ascending} layer-selection")
     ww_details = pd.read_csv(os.path.join('output', args.model_name_or_path, f"esd_{modif}.csv"))
+    if predefined_ww is not None:
+        ww_details = predefined_ww
     filtered = ww_details[  # type: ignore
         ww_details["longname"].str.contains("lm_head|embed_tokens") == False  # type: ignore
     ]
@@ -42,7 +44,7 @@ def get_layers(args):
     layer_to_train = list(set(layer_to_train))
     return layer_to_train
 
-def layer_log(args, model, savepath):
+def layer_log(args, model, savepath, step=None):
     if not args.debug:
         # Saving Details of Frozen Layers
         freeze_dict = None
@@ -54,9 +56,8 @@ def layer_log(args, model, savepath):
             elif torch.sum(param.grad.abs()).item() > 0:
                 freeze_dict["freeze_layer"].append(False)
         if freeze_dict is not None:
-            pd.DataFrame(freeze_dict).to_csv(
-                os.path.join(savepath, f"freeze.csv")
-            )
+            ext = f"_{step}" if step is not None else ""
+            pd.DataFrame(freeze_dict).to_csv(os.path.join(savepath, "freeze" + ext + ".csv"))
 
 def param_count(m):
     params = sum([p.numel() for p in m.parameters()])/1_000_000
