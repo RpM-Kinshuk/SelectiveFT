@@ -1,7 +1,7 @@
 # cachedir = '/rscratch/tpang/kinshuk/cache'
 cachedir = '/scratch/kinshuk/cache'
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "7"
 os.environ["HF_HOME"] = cachedir
 os.environ["TRANSFORMERS_CACHE"] = cachedir
 os.environ["HF_DATASETS_CACHE"]= cachedir
@@ -46,21 +46,23 @@ IGNORE_INDEX = -100
 DEFAULT_PAD_TOKEN = "[PAD]"
 from llamaft import ModelArguments, DataArguments, TrainingArguments, GenerationArguments
 import gpustat
+import pandas as pd
+from loader.esd_est import net_esd_estimator
+from loader.layers import get_layers, layer_log
 # Setting up the arguments
 
-AVAILABLE_GPUS = [3]
+AVAILABLE_GPUS = [7]
 
-# time.sleep(2000)
-sd = 87
+time.sleep(7200)
+sd = 42
 
 # model_name = 'meta-llama/Llama-2-7b-hf'
 model_name = 'meta-llama/Meta-Llama-3-8B'
-
 model_args = ModelArguments(model_name_or_path=model_name)
 
 data_args = DataArguments(
     max_eval_samples=1000,
-    dataset="alpaca", # DATASET [alpaca|chip2|self-instruct|hh-rlhf|oasst1|longform]
+    dataset="chip2", # DATASET [alpaca|chip2|self-instruct|hh-rlhf|oasst1|longform]
 )
 
 training_args = TrainingArguments(
@@ -71,26 +73,18 @@ training_args = TrainingArguments(
     do_eval=True,
     eval_steps=200,
     freeze = True,
-
     learning_rate=2e-6,     # LEARNING RATE
-    
-    max_steps=1000,       # NUMBER OF STEPS
-
-    sortby="alpha",        # CAN DO "alpha" or "lora" or "dora"
-
-    num_layers=12,           # NUMBER OF LAYERS FOR FULL FINE-TUNING
-
+    max_steps=25500,        # NUMBER OF STEPS
+    sortby="random",        # CAN DO "alpha" or "lora" or "dora"
+    num_layers=14,          # NUMBER OF LAYERS FOR FULL FINE-TUNING
+    # lora_r=64,
     per_device_train_batch_size = 1, # BATCH-SIZE
     memlog=True,
 )
 
 generation_args = GenerationArguments()
-
-# If you need to use GenerationConfig or similar for generation_args
 training_args.generation_config = transformers.GenerationConfig(**vars(generation_args))
-
-# Combine arguments into a single Namespace object (if needed)
-args = argparse.Namespace(**vars(model_args), **vars(data_args), **vars(training_args),)
+args = argparse.Namespace(**vars(model_args), **vars(data_args), **vars(training_args))
 args.cache_dir=cachedir
 
 gs = 0
@@ -136,6 +130,28 @@ def loss_fn(x, y):
     "A Flat CrossEntropy" 
     return torch.nn.functional.cross_entropy(x.view(-1, x.shape[-1]), y.view(-1))
 
+def esd_logs(args, model, savepath, step=0):
+    alphas = [None, 'xmin_peak', 'xmin_mid']
+    alpha = None
+    if 'peak' in args.sortby:
+        alpha = alphas[1]
+    elif 'mid' in args.sortby:
+        alpha = alphas[2]
+    label = alpha if alpha is not None else 'None'
+    path = os.path.join(savepath, 'stats', label)
+    Path(path).mkdir(parents=True, exist_ok=True)
+    esd = net_esd_estimator(net=model, fix_fingers=alpha)
+    esd = pd.DataFrame(esd)
+    esd.to_csv(os.path.join(path, f"step_{step}.csv"))
+    if False and step % 5000 == 0:
+        layer_to_train = get_layers(args=args, predefined_ww=esd)
+        for name, param in model.named_parameters():
+            if name in layer_to_train:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+        layer_log(args, model, path, step)
+
 def train(args, model, tokenizer, train_dataloader, eval_dataloader, data_module, savepath):
     peek_memory = 0
     for device in range(gpus):
@@ -163,6 +179,9 @@ def train(args, model, tokenizer, train_dataloader, eval_dataloader, data_module
         total_time = 0
         step = 0
         for step, batch in enumerate((train_dataloader)):
+
+            if False and step % 2500 == 0:
+                esd_logs(args, model, savepath, step)
             
             model.train()
             tick = time.time()
@@ -189,7 +208,10 @@ def train(args, model, tokenizer, train_dataloader, eval_dataloader, data_module
             optimizer.step()
             if step == 0:
                 optimizer_memory = (memall() - curr)
-                layer_log(args, model, savepath)
+                try:
+                    layer_log(args, model, savepath)
+                except Exception as e:
+                    logging.error(f"An error occurred while logging the layer: {e}")
         
             loss = loss.cpu()
             train_loss += loss.item()
@@ -199,7 +221,7 @@ def train(args, model, tokenizer, train_dataloader, eval_dataloader, data_module
             times.append(total_time)
             
             if step % 500 == 0:
-                print(f'Seed: {args.seed} | {args.sortby}_{args.num_layers}| Step: {step} | Train Loss: {train_loss/tr_steps}')
+                print(f'Seed: {args.seed} | {args.sortby}_{args.num_layers} | Step: {step} | Train Loss: {train_loss/tr_steps}')
             torch.cuda.empty_cache()
 
             if step == args.max_steps or step % args.eval_steps == 0 or step == 0:
