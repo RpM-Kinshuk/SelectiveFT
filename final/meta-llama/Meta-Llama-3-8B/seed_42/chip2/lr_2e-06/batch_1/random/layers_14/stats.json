@@ -1,0 +1,19 @@
+{
+    "total_param": 8030.26944,
+    "train_param": 490.733568,
+    "dataset": "chip2",
+    "method": "random",
+    "layers": 14,
+    "batch_size": 1,
+    "lr": 2e-06,
+    "eval_loss": 1.1043031215667725,
+    "forward_time": 15.98372487227122,
+    "backward_time": 33.02206697463989,
+    "weight_mem": 32121.094144,
+    "optimizer_mem": 3925.868544,
+    "activation_mem": 787.4743366676078,
+    "grad_mem": 2023.313200027608,
+    "input_mem": 0.002348353254901961,
+    "total_mem": 38076.190208,
+    "peak_mem": 40141.220352
+}
