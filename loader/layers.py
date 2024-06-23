@@ -11,7 +11,7 @@ def get_layers(args, predefined_ww=None):
     elif 'peak' in args.sortby:
         modif = 'peak'
     print(f"Using {args.model_name_or_path}/esd_{modif}.csv with {args.sortby}|Descending:{args.sort_ascending} layer-selection")
-    ww_details = pd.read_csv(os.path.join('output', args.model_name_or_path, f"esd_{modif}.csv"))
+    ww_details = pd.read_csv(os.path.join('results', args.model_name_or_path, f"esd_{modif}.csv"))
     if predefined_ww is not None:
         ww_details = predefined_ww
     filtered = ww_details[  # type: ignore
