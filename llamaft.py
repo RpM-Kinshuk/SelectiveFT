@@ -108,7 +108,7 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
         metadata={"help": "Whether to print verbose output."}
     )
     memlog: Optional[bool] = field(
-        default=False,
+        default=True,
         metadata={"help": "Whether to log memory usage."}
     )
     freeze: Optional[bool] = field(
