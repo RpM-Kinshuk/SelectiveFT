@@ -148,7 +148,7 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
         metadata={"help": "Whether to run the MMLU evaluation."}
     )
     do_eval: Optional[bool] = field(
-        default=False,
+        default=True,
         metadata={"help": "Whether to run the evaluation."}
     )
     max_mmlu_samples: Optional[int] = field(
