@@ -9,21 +9,22 @@ gpus = list(range(8))
 # gpus = [5, 6, 7]
 
 lr = 2e-6
-steps = 250
+steps = 200000
 num_layers = 14
-dataset = 'alpaca'
 
+seed = 42
 seed_list = [42, 43, 44, 45]
-seed_list = [42]
 
-sortby_list = ['alpha', 'layer', 'random', 'full']
-sortby_list = ['alpha']
+sortby_list = ['alpha_mid', 'layer', 'random', 'full']
+sortby_list = ['alpha_mid', 'layer']
 
+dataset = 'alpaca'
 dataset_list = ['alpaca', 'oasst1', 'self-instruct']
-orders = ['True', 'False']
 
-ascending_order = 'True'
-grid = itertools.product(seed_list, sortby_list)
+order = 'True'
+order_list = ['True', 'False']
+
+grid = itertools.product(dataset_list, sortby_list, order_list)
 
 # model = 'meta-llama/Meta-Llama-3-8B'
 model = 'meta-llama/Llama-2-7b-hf'
@@ -33,7 +34,7 @@ logger = get_logger('log', 'schedule_subspace.log')
 # Bash command list
 BASH_COMMAND_LIST = []
 
-for seed, sortby in grid:
+for dataset, sortby, order in grid:
     
     save_path = "/jumbo/yaoqingyang/kinshuk/LlaMAft/results"
 
@@ -45,7 +46,7 @@ for seed, sortby in grid:
         f" --output_dir {save_path}"
         f" --dataset {dataset}"
         f" --sortby {sortby}"
-        f" --sort_ascending {ascending_order}"
+        f" --sort_ascending {order}"
         f" --num_layers {num_layers}"
         f" --max_steps {steps}"
         f" --data_seed 42"
