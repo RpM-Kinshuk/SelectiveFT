@@ -1,8 +1,7 @@
 import os
 cachedir = '/scratch/kinshuk/cache'
 os.environ["HF_HOME"] = cachedir
-os.environ["TRANSFORMERS_CACHE"] = cachedir
-os.environ["HF_DATASETS_CACHE"]= cachedir
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 from tqdm.auto import tqdm
 from model import get_model
 from loader.layers import param_count, layer_log
@@ -354,7 +353,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
             times.append(total_time)
             
             if step % 500 == 0:
-                print(f'Seed: {args.seed} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Train Loss: {train_loss/tr_steps}')
+                print(f'Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Train Loss: {train_loss/tr_steps}')
             torch.cuda.empty_cache()
 
             if step == args.max_steps or step % args.eval_steps == 0 or step == 0:
@@ -362,10 +361,10 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
                 val_loss, val_acc = calc_val_loss(model, eval_dataloader)
                 val_losses.append(val_loss)
                 val_accs.append(val_acc)
-                print(f'Seed: {args.seed} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Val Loss: {val_loss}')
+                print(f'Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Val Loss: {val_loss}')
                 if step == args.max_steps:
                     break
-        print(f'Epoch: {epoch} | Seed: {args.seed} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Train Loss: {train_loss/tr_steps}')
+        print(f'Epoch: {epoch} | Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Train Loss: {train_loss/tr_steps}')
 
     total_memory = memall()
     peek_memory = sum([max_memory_allocated(i) for i in range(gpus)])
@@ -431,11 +430,10 @@ def main():
     asc = '_True' if args.sort_ascending else '_False'
     if args.verbose:
         task_info = (
-            f"\n\n{args.dataset} "
-            + f"Seed {args.seed}"
-            + f"Batch Size {args.per_device_train_batch_size} "
-            + f"{args.sortby}{asc} fine-tuning "
-            + f"{args.num_layers} Layers"
+            f"\n{args.dataset}\n"
+            + f"Seed {args.seed}\n"
+            + f"{args.sortby}{asc} fine-tuning\n"
+            + f"{args.num_layers} Layers\n"
         )
         print(task_info)
     else:
