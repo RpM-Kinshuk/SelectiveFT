@@ -354,7 +354,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
             times.append(total_time)
             
             if step % 500 == 0:
-                print(f'Seed: {args.seed} | {args.sortby}_{args.num_layers} | Step: {step} | Train Loss: {train_loss/tr_steps}')
+                print(f'Seed: {args.seed} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Train Loss: {train_loss/tr_steps}')
             torch.cuda.empty_cache()
 
             if step == args.max_steps or step % args.eval_steps == 0 or step == 0:
@@ -362,9 +362,10 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
                 val_loss, val_acc = calc_val_loss(model, eval_dataloader)
                 val_losses.append(val_loss)
                 val_accs.append(val_acc)
-                print(f'Seed: {args.seed} | {args.sortby}_{args.num_layers} | Step: {step} | Val Loss: {val_loss}')
+                print(f'Seed: {args.seed} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Val Loss: {val_loss}')
                 if step == args.max_steps:
                     break
+        print(f'Epoch: {epoch} | Seed: {args.seed} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Train Loss: {train_loss/tr_steps}')
 
     total_memory = memall()
     peek_memory = sum([max_memory_allocated(i) for i in range(gpus)])
@@ -427,12 +428,14 @@ def main():
     torch.backends.cudnn.deterministic = True
     set_seed(args.seed)  # transformers seed
 
+    asc = '_True' if args.sort_ascending else '_False'
     if args.verbose:
         task_info = (
-            f"\nSeed: {args.seed}\n"
-            + f"Dataset: {args.dataset}\n"
-            + f"Sort by: {args.sortby}\n"
-            + f"Layers to train: {args.num_layers}\n"
+            f"\n\n{args.dataset} "
+            + f"Seed {args.seed}"
+            + f"Batch Size {args.per_device_train_batch_size} "
+            + f"{args.sortby}{asc} fine-tuning "
+            + f"{args.num_layers} Layers"
         )
         print(task_info)
     else:
@@ -441,7 +444,6 @@ def main():
         global _tqdm_active
         _tqdm_active = False
     
-    asc = '_True' if args.sort_ascending else '_False'
     if ('layer' not in args.sortby) and ('alpha' not in args.sortby):
         asc = ''
     if args.sortby == 'lora' or args.sortby == 'dora':
@@ -508,8 +510,9 @@ def main():
             fout.write(json.dumps(all_metrics))
         log_info = (
             f"\n\n{args.dataset} "
+            + f"Seed {args.seed}"
             + f"Batch Size {args.per_device_train_batch_size} "
-            + f"{args.sortby} fine-tuning "
+            + f"{args.sortby}{asc} fine-tuning "
             + f"{args.num_layers} Layers"
         )
         logger = get_logger(savepath, "memlog.log")
