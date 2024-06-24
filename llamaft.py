@@ -1,13 +1,13 @@
-#TODO: Handle extra args and save metrics systematically
 import os
-cachedir = '/rscratch/tpang/kinshuk/cache'
-os.environ["TRANSFORMERS_CACHE"]=cachedir
-os.environ["HF_DATASETS_CACHE"]=cachedir
+cachedir = '/scratch/kinshuk/cache'
+os.environ["HF_HOME"] = cachedir
+os.environ["TRANSFORMERS_CACHE"] = cachedir
+os.environ["HF_DATASETS_CACHE"]= cachedir
 from tqdm.auto import tqdm
 from model import get_model
-from loader.layers import param_count
-from traineval.eval import eval_func
+from loader.layers import param_count, layer_log
 from loader.data_module import make_data_module
+from traineval.eval import eval_func, calc_val_loss
 import json
 import time
 import torch
@@ -15,6 +15,7 @@ import random
 import logging
 import argparse
 import numpy as np
+import pandas as pd
 import transformers
 from pathlib import Path
 # import accelerate.utils
@@ -31,18 +32,20 @@ from transformers import (
     set_seed,
     Seq2SeqTrainer,
 )
-# from accelerate import Accelerator
 from os.path import exists, join, isdir
 from torch.utils.data import DataLoader
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Sequence
-
 from transformers.utils.logging import (
     set_verbosity_error as transformers_vb_err,
 )
 from datasets.utils.logging import (
     set_verbosity_error as datasets_vb_err,
 )
+from loader.esd_est import net_esd_estimator
+from loader.layers import get_layers, layer_log
+IGNORE_INDEX = -100
+DEFAULT_PAD_TOKEN = "[PAD]"
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -126,6 +129,10 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
     sort_ascending: bool = field(
         default=False,
         metadata={"help": "Whether to train in ascending order of layer sorting method."}
+    )
+    eval_steps: Optional[int] = field(
+        default=200,
+        metadata={"help": "Frequency of evaluation per number of steps."}
     )
     add_layer_norm: bool = field(
         default=False,
@@ -250,6 +257,152 @@ class GenerationArguments:
     length_penalty: Optional[float] = field(default=1.0)
     no_repeat_ngram_size: Optional[int] = field(default=0)
 
+gpus = torch.cuda.device_count()
+memory_per_gpu = [0] * gpus
+def memall(gpus=gpus):
+    for i in range(gpus):
+        memory_per_gpu[i] = torch.cuda.memory_allocated(i)
+    return sum(memory_per_gpu)
+
+def loss_fn(x, y):
+    "A Flat CrossEntropy" 
+    return torch.nn.functional.cross_entropy(x.view(-1, x.shape[-1]), y.view(-1))
+
+def esd_logs(args, model, savepath, step=0):
+    alphas = [None, 'xmin_peak', 'xmin_mid']
+    alpha = None
+    if 'peak' in args.sortby:
+        alpha = alphas[1]
+    elif 'mid' in args.sortby:
+        alpha = alphas[2]
+    label = alpha if alpha is not None else 'None'
+    path = os.path.join(savepath, 'stats', label)
+    Path(path).mkdir(parents=True, exist_ok=True)
+    esd = net_esd_estimator(net=model, fix_fingers=alpha)
+    esd = pd.DataFrame(esd)
+    esd.to_csv(os.path.join(path, f"step_{step}.csv"))
+    if False and step % 5000 == 0:
+        layer_to_train = get_layers(args=args, predefined_ww=esd)
+        for name, param in model.named_parameters():
+            if name in layer_to_train:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+        layer_log(args, model, path, step)
+
+def train(args, training_args, model, tokenizer, train_dataloader, eval_dataloader, data_module, savepath):
+    peek_memory = 0
+    for device in range(gpus):
+        reset_peak_memory_stats(device=device)
+        reset_max_memory_allocated(device=device)
+    weight_memory = memall()
+    input_memory = 0
+    activation_memory = 0
+    gradient_memory = 0
+    train_losses = []
+    val_losses = []
+    val_accs = []
+    times = []
+    model.train()
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    optimizer.zero_grad()
+    optimizer_memory = 0
+    forward_time = 0
+    backward_time = 0
+    epochs = 3 if args.dataset == 'oasst1' else 1
+    for epoch in range(epochs):
+        train_loss = 0
+        tr_steps = 0
+        tick = 0
+        total_time = 0
+        step = 0
+        for step, batch in enumerate((train_dataloader)):
+            
+            model.train()
+            tick = time.time()
+            optimizer.zero_grad()
+            curr = memall()
+            batch = {k: v.to(model.device) for k, v in batch.items()}
+            ipm = (memall() - curr)
+            input_memory += ipm
+            
+            curr = memall()
+            start = time.time()
+            output = model(**batch)
+            forward_time += time.time() - start
+            activation_memory += (memall() - curr)
+            
+            start = time.time()
+            # loss = loss_fn(out.logits, batch["labels"]) / args.gradient_accumulation_steps
+            loss = output.loss
+            loss.backward()
+            backward_time += time.time() - start
+            gradient_memory += (memall() - ipm - weight_memory - optimizer_memory)
+
+            curr = memall()
+            optimizer.step()
+            if step == 0:
+                optimizer_memory = (memall() - curr)
+                if 'lora' not in args.sortby:
+                    layer_log(args, model, savepath)
+        
+            loss = loss.cpu()
+            train_loss += loss.item()
+            tr_steps += 1
+            train_losses.append(train_loss/tr_steps)
+            total_time += time.time() - tick
+            times.append(total_time)
+            
+            if step % 500 == 0:
+                print(f'Seed: {args.seed} | {args.sortby}_{args.num_layers} | Step: {step} | Train Loss: {train_loss/tr_steps}')
+            torch.cuda.empty_cache()
+
+            if step == args.max_steps or step % args.eval_steps == 0 or step == 0:
+                model.eval()
+                val_loss, val_acc = calc_val_loss(model, eval_dataloader)
+                val_losses.append(val_loss)
+                val_accs.append(val_acc)
+                print(f'Seed: {args.seed} | {args.sortby}_{args.num_layers} | Step: {step} | Val Loss: {val_loss}')
+                if step == args.max_steps:
+                    break
+
+    total_memory = memall()
+    peek_memory = sum([max_memory_allocated(i) for i in range(gpus)])
+
+    optimizer.zero_grad()
+    model.eval()
+    trainer=Seq2SeqTrainer(
+                    model=model,
+                    tokenizer=tokenizer,
+                    args=training_args,
+                    **{k:v for k,v in data_module.items() if k != 'predict_dataset'},
+                )
+    all_metrics = {"run_name": args.run_name}
+    if args.do_eval:
+        all_metrics = eval_func(args, logger, trainer, all_metrics)
+
+    base = {"train_loss": train_losses, "val_loss": val_losses, "val_acc": val_accs, "time": times}
+    memory_dict = {
+        "total_param": param_count(model)[0],
+        "train_param": param_count(model)[1],
+        "dataset": args.dataset,
+        "method": args.sortby,
+        "layers": args.num_layers,
+        "batch_size": args.per_device_train_batch_size,
+        "lr": args.learning_rate,
+        "eval_loss": all_metrics["eval_loss"],
+        "forward_time": forward_time / 60,
+        "backward_time": backward_time / 60,
+        "weight_mem": weight_memory / 1e6,
+        "optimizer_mem": optimizer_memory / 1e6,
+        "activation_mem": (activation_memory / step) / 1e6,
+        "grad_mem": (gradient_memory / step) / 1e6,
+        "input_mem": (input_memory / step) / 1e6,
+        "total_mem": total_memory / 1e6,
+        "peak_mem": peek_memory / 1e6,
+    }
+    return base, all_metrics, memory_dict
+
 def main():
     global logger
     hfparser = transformers.HfArgumentParser((
@@ -264,8 +417,16 @@ def main():
         **vars(model_args), **vars(data_args), **vars(training_args)
     )
     print(args)
-    os.environ["TRANSFORMERS_CACHE"] = args.cache_dir
-    os.environ["HF_DATASETS_CACHE"]= args.cache_dir
+    
+    # Control randomness
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    set_seed(args.seed)  # transformers seed
+
     if args.verbose:
         task_info = (
             f"\nSeed: {args.seed}\n"
@@ -280,133 +441,66 @@ def main():
         global _tqdm_active
         _tqdm_active = False
     
-    # Control randomness
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)
-    torch.backends.cudnn.benchmark = False
-    torch.backends.cudnn.deterministic = True
-    set_seed(args.seed)  # transformers seed
-    
-    gpus = torch.cuda.device_count()
-    start_memory = [0] * gpus
-    peek_memory = 0
+    asc = '_True' if args.sort_ascending else '_False'
+    if ('layer' not in args.sortby) and ('alpha' not in args.sortby):
+        asc = ''
+    if args.sortby == 'lora' or args.sortby == 'dora':
+        args.num_layers = 0
+    if 'full' in args.sortby:
+        args.freeze = False
+        args.num_layers = 250
+        args.learning_rate = 2e-7
+    savepath = f"{args.output_dir}/{args.model_name_or_path}/seed_{args.seed}/{args.dataset}/lr_{args.learning_rate}/batch_{args.per_device_train_batch_size}/{args.sortby}{asc}/layers_{args.num_layers}"
+    Path(savepath).mkdir(parents=True, exist_ok=True)
 
-    def memall(gpus=gpus):
-        for i in range(gpus):
-            start_memory[i] = torch.cuda.memory_allocated(i)
-        return sum(start_memory)
-    
     model, tokenizer = get_model(args)
-    for device in range(gpus):
-        reset_peak_memory_stats(device=device)
-        reset_max_memory_allocated(device=device)
-    weight_memory = memall()
 
+    if 'full' in args.sortby:
+        for param in model.parameters():
+            param.requires_grad = True
+    
     data_module = make_data_module(tokenizer=tokenizer, args=args) # type: ignore
     dataset = {k:v for k,v in data_module.items()}
     train_dataloader = DataLoader(
         dataset['train_dataset'], # type: ignore
         batch_size=args.per_device_train_batch_size,
-        collate_fn=dataset['data_collator']
+        collate_fn=dataset['data_collator'],
+        shuffle=True,
     )
-
-    def loss_fn(x, y):
-        "A Flat CrossEntropy" 
-        return torch.nn.functional.cross_entropy(x.view(-1, x.shape[-1]), y.view(-1))
-
-    train_losses = []
-    val_losses = []
-    val_accs = []
-    times = []
-
-    model.train()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
-    optimizer.zero_grad()
-    optimizer_memory = 0
-    forward_time = 0
-    backward_time = 0
-
-    for epoch in range(1):
-        train_loss = 0
-        tr_steps = 0
-        tick = 0
-        total_time = 0
-        for step, batch in enumerate((train_dataloader)):
-
-            tick = time.time()
-            optimizer.zero_grad()
-            curr = memall()
-            batch = {k: v.to(model.device) for k, v in batch.items()}
-            input_memory = memall() - curr
-
-            curr = memall()
-            start = time.time()
-            output = model(**batch)
-            forward_time += time.time() - start
-            activation_memory = memall() - curr
-
-            curr = memall()
-            start = time.time()
-            # loss = loss_fn(out.logits, batch["labels"]) / args.gradient_accumulation_steps
-            loss = output.loss
-            loss.backward()
-            backward_time += time.time() - start
-            gradient_memory = memall() - input_memory - weight_memory - optimizer_memory
-
-            curr = memall()
-            optimizer.step()
-            if step == 0:
-                 optimizer_memory = memall() - curr
-
-            loss = loss.cpu()
-            train_loss += loss.item()
-            tr_steps += 1
-            train_losses.append(train_loss/tr_steps)
-            if step % 50 == 0 and args.verbose:
-                print(f'Step: {step}, Train Loss: {train_loss/tr_steps}')
-            torch.cuda.empty_cache()
-            total_time += time.time() - tick
-            times.append(total_time)
-            if step == args.max_steps:
-                model.eval()
-                break
-
-    total_memory = memall()
-    trainer=Seq2SeqTrainer(
-                model=model,
-                tokenizer=tokenizer,
-                args=training_args,
-                **{k:v for k,v in data_module.items() if k != 'predict_dataset'},
-            )
-    all_metrics = {"run_name": args.run_name}
-    if args.do_eval:
-        all_metrics = eval_func(args, logger, trainer, all_metrics)
-
-    total_memory = memall()
-    peek_memory = max([max_memory_allocated(i) for i in range(gpus)])
-    memory_string = (
-        f"{param_count(model)}\n"
-        f"Dataset          : {args.dataset}\n"
-        f"Method           : {args.sortby}\n"
-        f"Layers           : {args.num_layers}\n"
-        f"Batch size       : {args.per_device_train_batch_size}\n"
-        f"Learning Rate    : {args.learning_rate}\n"
-        f"Forward time     : {forward_time/60} min\n"
-        f"Backward time    : {backward_time/60} min\n"
-        f"Weight memory    : {weight_memory / 1e6} MB\n"
-        f"Optimizer memory : {optimizer_memory / 1e6} MB\n"
-        f"Activation memory: {activation_memory / 1e6} MB\n"
-        f"Gradient memory  : {gradient_memory / 1e6} MB\n"
-        f"Input memory     : {input_memory / 1e6} MB\n"
-        f"Total memory     : {total_memory / 1e6} MB\n"
-        f"Peak memory      : {peek_memory / 1e6} MB\n"
-    )
-    base = {"train_loss": train_losses,"time": times}
-    savepath = f"./output/{args.dataset}/lr_{args.learning_rate}/batch_{args.per_device_train_batch_size}/{args.sortby}/layers_{args.num_layers}"
     if args.verbose:
+        print(train_dataloader.__len__())
+
+    eval_dataloader = DataLoader(
+        dataset['eval_dataset'], # type: ignore
+        batch_size=args.per_device_train_batch_size,
+        collate_fn=dataset['data_collator'],
+        shuffle=False,
+    )
+
+    base, all_metrics, memory_dict = train(args, training_args, model, tokenizer, train_dataloader, eval_dataloader, dataset, savepath)
+
+    memory_string = (
+        f"Total param      : {memory_dict['total_param']}\n"
+        f"Train param      : {memory_dict['train_param']}\n"
+        f"Dataset          : {memory_dict['dataset']}\n"
+        f"Method           : {memory_dict['method']}\n"
+        f"Layers           : {memory_dict['layers']}\n"
+        f"Batch size       : {memory_dict['batch_size']}\n"
+        f"Learning Rate    : {memory_dict['lr']}\n"
+        f"Eval Loss        : {memory_dict['eval_loss']}\n"
+        f"Forward time     : {memory_dict['forward_time']} min\n"
+        f"Backward time    : {memory_dict['backward_time']} min\n"
+        f"Weight memory    : {memory_dict['weight_mem']} MB\n"
+        f"Optimizer memory : {memory_dict['optimizer_mem']} MB\n"
+        f"Activation memory: {memory_dict['activation_mem']} MB\n"
+        f"Gradient memory  : {memory_dict['grad_mem']} MB\n"
+        f"Input memory     : {memory_dict['input_mem']} MB\n"
+        f"Total memory     : {memory_dict['total_mem']} MB\n"
+        f"Peak memory      : {memory_dict['peak_mem']} MB\n"
+    )
+    if args.verbose: 
         print(memory_string)
+
     if args.memlog:
         Path(savepath).mkdir(parents=True, exist_ok=True)
         np.save(os.path.join(savepath, "finetune.npy"), base) # type: ignore
@@ -424,25 +518,7 @@ def main():
         if (args.do_train or args.do_eval or args.do_predict):
             with open(os.path.join(savepath, "metrics.json"), "w") as fout:
                 fout.write(json.dumps(all_metrics))
-        memory_dict = {
-            "total_param": param_count(model)[0],
-            "train_param": param_count(model)[1],
-            "dataset": args.dataset,
-            "method": args.sortby,
-            "layers": args.num_layers,
-            "batch_size": args.per_device_train_batch_size,
-            "lr": args.learning_rate,
-            "eval_loss": all_metrics["eval_loss"],
-            "forward_time": forward_time / 60,
-            "backward_time": backward_time / 60,
-            "weight_mem": weight_memory / 1e6,
-            "optimizer_mem": optimizer_memory / 1e6,
-            "activation_mem": activation_memory / 1e6,
-            "grad_mem": gradient_memory / 1e6,
-            "input_mem": input_memory / 1e6,
-            "total_mem": total_memory / 1e6,
-            "peak_mem": peek_memory / 1e6,
-        }
+
         with open(os.path.join(savepath,'stats.json'), 'w') as json_file:
             json.dump(memory_dict, json_file, indent=4)
 
