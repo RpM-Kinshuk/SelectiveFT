@@ -3,52 +3,56 @@ import itertools
 from numpy import sort
 from sklearn.neighbors import sort_graph_by_row_values
 from gputracker.gputracker import get_logger, DispatchThread
-
-gpus = list(range(8))
-
-# Set the MKL threading layer to 'gnu'
 os.environ['MKL_THREADING_LAYER'] = 'gnu'
 
-# GPUs to use
+gpus = list(range(8))
 # gpus = [5, 6, 7]
 
-# Parameters to vary
-num_layers_list = [14]  # You can add more values as needed
-max_steps_list = [22500]  # You can add more values as needed
-sortby_list = ["block_random"]  # You can add more values as needed
-seed_list = [42, 357]  # Example seed values
-model_name_or_path = 'meta-llama/Meta-Llama-3-8B'
-cachedir = "/scratch/kinshuk/cache"  # Set your cache directory
+lr = 2e-6
+steps = 250
+num_layers = 14
+dataset = 'alpaca'
 
-# Logger setup
+seed_list = [42, 43, 44, 45]
+seed_list = [42]
+
+sortby_list = ['alpha', 'layer', 'random', 'full']
+sortby_list = ['alpha']
+
+dataset_list = ['alpaca', 'oasst1', 'self-instruct']
+orders = ['True', 'False']
+
+ascending_order = 'True'
+grid = itertools.product(seed_list, sortby_list)
+
+# model = 'meta-llama/Meta-Llama-3-8B'
+model = 'meta-llama/Llama-2-7b-hf'
+cachedir = "/scratch/kinshuk/cache"
 logger = get_logger('log', 'schedule_subspace.log')
 
-# BASH command list
+# Bash command list
 BASH_COMMAND_LIST = []
 
-# Generate commands for each combination of parameters
-for num_layers, max_steps, sortby, seed in itertools.product(num_layers_list, max_steps_list, sortby_list, seed_list):
-    save_path = f"./results/{model_name_or_path}/seed_{seed}"
+for seed, sortby in grid:
+    
+    save_path = f"./final"
 
     cmd = (
-        "OMP_NUM_THREADS=1 python /jumbo/yaoqingyang/kinshuk/LlaMAft/selft.py "
-        f"--seed {seed} "
-        f"--data_seed 7 "
-        f"--output_dir {save_path} "
-        f"--dataset alpaca "
-        f"--max_eval_samples 50 "
-        f"--dataloader_num_workers 1 "
-        f"--do_eval false "
-        f"--max_steps {max_steps} "
-        f"--sortby {sortby} "
-        f"--num_layers {num_layers} "
-        f"--source_max_len 512 "
-        f"--target_max_len 256 "
-        f"--learning_rate 2e-6 "
-        f"--per_device_train_batch_size 1 "
-        f"--memlog "
-        f"--cache_dir {cachedir} "
-        f"--model_name_or_path {model_name_or_path} "
+        "OMP_NUM_THREADS=1 python /jumbo/yaoqingyang/kinshuk/LlaMAft/selft.py"
+        f" --seed {seed}"
+        f" --model_name_or_path {model}"
+        f" --cache_dir {cachedir}"
+        f" --output_dir {save_path}"
+        f" --dataset {dataset}"
+        f" --sortby {sortby}"
+        f" --sort_ascending {ascending_order}"
+        f" --num_layers {num_layers}"
+        f" --max_steps {steps}"
+        f" --data_seed 42"
+        f" --source_max_len 1024"
+        f" --learning_rate 2e-6"
+        f" --dataloader_num_workers 1"
+        f" --evaluation_strategy steps"
     )
 
     BASH_COMMAND_LIST.append(cmd)
