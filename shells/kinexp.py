@@ -35,10 +35,10 @@ BASH_COMMAND_LIST = []
 
 for seed, sortby in grid:
     
-    save_path = f"./final"
+    save_path = "/jumbo/yaoqingyang/kinshuk/LlaMAft/results"
 
     cmd = (
-        "OMP_NUM_THREADS=1 python /jumbo/yaoqingyang/kinshuk/LlaMAft/selft.py"
+        "OMP_NUM_THREADS=1 python /jumbo/yaoqingyang/kinshuk/LlaMAft/llamaft.py"
         f" --seed {seed}"
         f" --model_name_or_path {model}"
         f" --cache_dir {cachedir}"
