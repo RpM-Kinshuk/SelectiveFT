@@ -12,6 +12,7 @@ import os
 import sys
 import gpustat
 import logging
+import random
 import itertools
 # from torch.cuda import max_memory_allocated, reset_peak_memory_stats, reset_max_memory_allocated, memory_allocated
 # from torch.cuda import init as torch_cuda_init
@@ -31,9 +32,9 @@ all_empty = {"ind": True}
 occupied_gpus = []
 
 # NEW
-def mark_occupied(gpu_id):
+def mark_occupied(gpu_ids):
     global occupied_gpus
-    occupied_gpus.append(gpu_id)
+    occupied_gpus.extend(gpu_ids)
 
 
 def num_available_GPUs(gpus):
@@ -44,16 +45,16 @@ def num_available_GPUs(gpus):
     return sum_i
 
 
-def get_free_gpu_indices(logger):
+def get_free_gpu_indices(logger, num_gpus_needed):
     '''
-        Return an available GPU index.
+        Return a list of available GPU indices.
     '''
     counter = {}
     while True:
         stats = gpustat.GPUStatCollection.new_query()
         # print('stats length: ', len(stats))
         
-        if num_available_GPUs(stats.gpus) >= 4:
+        if num_available_GPUs(stats.gpus) >= num_gpus_needed:
             all_empty["ind"] = True
             
         if not all_empty["ind"]:
@@ -63,6 +64,7 @@ def get_free_gpu_indices(logger):
         
         max_checks = 0
         max_gpu_id = -1
+        available_gpus = []
         
         for i, stat in enumerate(stats.gpus):
             memory_used = stat['memory.used']
@@ -74,24 +76,24 @@ def get_free_gpu_indices(logger):
                     counter.update({i: 0})
                 else:
                     counter[i] = counter[i] + 1
-                ###Multiple Check available to avoid some accident 
                 if counter[i] >= MAX_NCHECK:
-                    # NEW
-                    mark_occupied(i)
-                    return i
+                    available_gpus.append(i)
+                    if len(available_gpus) == num_gpus_needed:
+                        mark_occupied(available_gpus)
+                        return available_gpus
             else:
                 counter.update({i: 0})
 
             if counter[i] > max_checks:
                 max_checks = counter[i]
                 max_gpu_id = i
-
-        # logger.info(f"Waiting on GPUs, Checking {max_checks}/{MAX_NCHECK} at gpu {max_gpu_id}")
+        
+        if max_gpu_id != -1:
+            logger.info(f"Waiting on GPUs, Checking {max_checks}/{MAX_NCHECK} at gpu {max_gpu_id}")
         time.sleep(10)
 
-        
 class DispatchThread(threading.Thread):
-    def __init__(self, name, bash_command_list, logger, gpu_m_th, gpu_list, maxcheck):
+    def __init__(self, name, bash_command_list, logger, gpu_m_th, gpu_list, maxcheck, num_gpus_needed=1):
         threading.Thread.__init__(self)
         self.name = name
         self.bash_command_list = bash_command_list
@@ -102,16 +104,15 @@ class DispatchThread(threading.Thread):
         AVAILABLE_GPUS = gpu_list
         global MAX_NCHECK
         MAX_NCHECK = maxcheck
+        self.num_gpus_needed = num_gpus_needed
 
     def run(self):
         self.logger.info("Starting " + self.name)
         threads = []
         for i, bash_command in enumerate(self.bash_command_list):
-             
-            import time
-                
-            time.sleep(0.3)
             
+            time.sleep(0.3)
+
             #if os.path.isfile(result_name):
             #    print("Result already exists! {0}".format(result_name))
             #    continue
@@ -119,10 +120,10 @@ class DispatchThread(threading.Thread):
             #else:
             #    print("Result not ready yet. Running it for a second time: {0}".format(result_name))
             
-            cuda_device = get_free_gpu_indices(self.logger)
-            thread1 = ChildThread(f"{i}th + {bash_command}", 1, cuda_device, bash_command, self.logger)
+            cuda_devices = get_free_gpu_indices(self.logger, self.num_gpus_needed)
+            thread1 = ChildThread(f"{i}th + {bash_command}", 1, cuda_devices, bash_command, self.logger)
             thread1.start()
-            
+
             time.sleep(10)
             threads.append(thread1)
 
@@ -131,38 +132,31 @@ class DispatchThread(threading.Thread):
             t.join()
         self.logger.info("Exiting " + self.name)
 
-
 class ChildThread(threading.Thread):
-    def __init__(self, name, counter, cuda_device, bash_command, logger):
+    def __init__(self, name, counter, cuda_devices, bash_command, logger):
         threading.Thread.__init__(self)
         self.name = name
         self.counter = counter
-        self.cuda_device = cuda_device
+        self.cuda_devices = cuda_devices
         self.bash_command = bash_command
         self.logger = logger
 
     def run(self):
         # torch_cuda_init()
-        # os.environ['CUDA_VISIBLE_DEVICES'] = f'{self.cuda_device[0]},{self.cuda_device[1]}'
-        os.environ['CUDA_VISIBLE_DEVICES'] = f'{self.cuda_device}'
+        os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(map(str, self.cuda_devices))
         bash_command = self.bash_command
 
-        self.logger.info(f'executing {bash_command} on GPU: {self.cuda_device}')
-        # reset_max_memory_allocated(device=self.cuda_device)
-        # start_memory = memory_allocated(device=self.cuda_device)
+        self.logger.info(f'executing {bash_command} on GPUs: {self.cuda_devices}')
+        # start_memory = 0
+        # for gpu in self.cuda_devices:
+        #     reset_peak_memory_allocated(device=gpu)
+        #     start_memory += memory_allocated(device=gpu)
         # ACTIVATE
         os.system(bash_command)
-        import time
-        import random
         time.sleep(random.random() % 5)
         
-        # NEW
-        occupied_gpus.remove(self.cuda_device)
-        # end_memory = memory_allocated(device=self.cuda_device)
-        # peek_memory = max_memory_allocated(device=self.cuda_device)
-
-        # self.logger.info(f"\n\nGPU {self.cuda_device}: Memory usage before: {start_memory} bytes, Memory usage after: {end_memory} bytes")
-        # self.logger.info(f"\nGPU {self.cuda_device}: Peak Memory usage: {peek_memory}")
+        for gpu in self.cuda_devices:
+            occupied_gpus.remove(gpu)
         self.logger.info("Finishing " + self.name + "\n\n")
 
 
