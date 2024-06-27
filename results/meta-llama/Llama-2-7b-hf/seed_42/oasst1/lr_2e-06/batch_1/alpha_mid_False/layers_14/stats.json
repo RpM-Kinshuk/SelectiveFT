@@ -1,0 +1,19 @@
+{
+    "total_param": 6738.423808,
+    "train_param": 631.242752,
+    "dataset": "oasst1",
+    "method": "alpha_mid",
+    "layers": 14,
+    "batch_size": 1,
+    "lr": 2e-06,
+    "eval_loss": 1.2715396881103516,
+    "forward_time": 12.4811842918396,
+    "backward_time": 44.5974551598231,
+    "weight_mem": 26953.711616,
+    "optimizer_mem": 0.0,
+    "activation_mem": 5032.572182723954,
+    "grad_mem": 17812.10005316404,
+    "input_mem": 0.0146049726788346,
+    "total_mem": 34562.82112,
+    "peak_mem": 37104.195584
+}

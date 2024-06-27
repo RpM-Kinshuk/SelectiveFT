@@ -1,0 +1,23 @@
+2024-06-24 19:16:18;INFO;
+
+self-instruct Seed 42Batch Size 1 alpha_mid_True fine-tuning 14 Layers
+2024-06-24 19:16:18;INFO;
+Total param      : 6738.423808
+Train param      : 234.881024
+Dataset          : self-instruct
+Method           : alpha_mid
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 0.6593725085258484
+Forward time     : 54.182342970371245 min
+Backward time    : 64.43399731318156 min
+Weight memory    : 26953.711616 MB
+Optimizer memory : 1879.048192 MB
+Activation memory: 520.4425577839608 MB
+Gradient memory  : 965.3104546745927 MB
+Input memory     : 0.002040061480382904 MB
+Total memory     : 29795.341824 MB
+Peak memory      : 37739.702784 MB
+
+
