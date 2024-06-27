@@ -93,7 +93,7 @@ def get_free_gpu_indices(logger, num_gpus_needed):
         time.sleep(10)
 
 class DispatchThread(threading.Thread):
-    def __init__(self, name, bash_command_list, logger, gpu_m_th, gpu_list, maxcheck, num_gpus_needed=1):
+    def __init__(self, name, bash_command_list, logger, gpu_m_th, gpu_list, maxcheck, num_gpus_needed):
         threading.Thread.__init__(self)
         self.name = name
         self.bash_command_list = bash_command_list
