@@ -303,7 +303,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
     val_accs = []
     times = []
     model.train()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
     optimizer.zero_grad()
     optimizer_memory = 0
     forward_time = 0
