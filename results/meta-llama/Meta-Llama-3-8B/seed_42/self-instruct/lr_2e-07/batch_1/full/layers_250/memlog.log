@@ -1,0 +1,23 @@
+2024-06-27 15:14:41;INFO;
+
+self-instruct Seed 42Batch Size 1 full fine-tuning 250 Layers
+2024-06-27 15:14:41;INFO;
+Total param      : 8030.26944
+Train param      : 8030.26944
+Dataset          : self-instruct
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 2e-07
+Eval Loss        : 0.5371718406677246
+Forward time     : 167.0989898443222 min
+Backward time    : 147.9392105817795 min
+Weight memory    : 36592.222208 MB
+Optimizer memory : 64242.15552 MB
+Activation memory: 869.8635769153418 MB
+Gradient memory  : 29262.431770507752 MB
+Input memory     : 0.0019208456249157342 MB
+Total memory     : 128844.380672 MB
+Peak memory      : 165349.990912 MB
+
+
