@@ -1,0 +1,23 @@
+2024-06-29 05:11:08;INFO;
+
+oasst1 Seed 42Batch Size 1 alpha_peak_False fine-tuning 14 Layers
+2024-06-29 05:11:08;INFO;
+Total param      : 8030.26944
+Train param      : 603.979776
+Dataset          : oasst1
+Method           : alpha_peak
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 1.3558050394058228
+Forward time     : 20.35067592461904 min
+Backward time    : 70.30392450491587 min
+Weight memory    : 32389.5296 MB
+Optimizer memory : 0.0 MB
+Activation memory: 6478.191712700148 MB
+Gradient memory  : 17289.238859020974 MB
+Input memory     : 0.014054025620677927 MB
+Total memory     : 39715.379712 MB
+Peak memory      : 42204.156416 MB
+
+
