@@ -1,0 +1,23 @@
+2024-07-04 23:57:34;INFO;
+
+oasst1 Seed 41Batch Size 1 random fine-tuning 14 Layers
+2024-07-04 23:57:34;INFO;
+Total param      : 6738.423808
+Train param      : 319.81568
+Dataset          : oasst1
+Method           : random
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 1.256396770477295
+Forward time     : 15.072338497638702 min
+Backward time    : 43.12310349941254 min
+Weight memory    : 26953.711616 MB
+Optimizer memory : 0.0 MB
+Activation memory: 5163.961955834486 MB
+Gradient memory  : 9092.842708554586 MB
+Input memory     : 0.0146049726788346 MB
+Total memory     : 30827.104256 MB
+Peak memory      : 32122.78784 MB
+
+
