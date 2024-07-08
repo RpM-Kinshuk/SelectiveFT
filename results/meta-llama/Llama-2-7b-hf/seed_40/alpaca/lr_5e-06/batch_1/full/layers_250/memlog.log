@@ -1,0 +1,23 @@
+2024-07-02 16:04:50;INFO;
+
+alpaca Seed 40Batch Size 1 full fine-tuning 250 Layers
+2024-07-02 16:04:50;INFO;
+Total param      : 6738.423808
+Train param      : 6738.423808
+Dataset          : alpaca
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 5e-06
+Eval Loss        : 1.2749775648117065
+Forward time     : 40.39862644672394 min
+Backward time    : 61.55038399298986 min
+Weight memory    : 28002.287616 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 1413.1688266027425 MB
+Gradient memory  : 26017.841852591406 MB
+Input memory     : 0.003071839300076505 MB
+Total memory     : 107901.782016 MB
+Peak memory      : 135945.043968 MB
+
+
