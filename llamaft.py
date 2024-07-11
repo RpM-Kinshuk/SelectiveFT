@@ -308,12 +308,12 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
     optimizer_memory = 0
     forward_time = 0
     backward_time = 0
+    total_time = 0
     epochs = 3 if args.dataset == 'oasst1' else 1
     for epoch in range(epochs):
         train_loss = 0
         tr_steps = 0
         tick = 0
-        total_time = 0
         step = 0
         for step, batch in enumerate((train_dataloader)):
             
