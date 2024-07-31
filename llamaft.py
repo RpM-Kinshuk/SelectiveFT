@@ -95,6 +95,10 @@ class DataArguments:
         default=None,
         metadata={"help": "Dataset format being used. [alpaca|chip2|self-instruct|hh-rlhf]"}
     )
+    task_name: Optional[str] = field(
+        default=None,
+        metadata={"help": "Task name for GLUE datasets."}
+    )
 
 @dataclass
 class TrainingArguments(transformers.Seq2SeqTrainingArguments):
