@@ -15,6 +15,18 @@ from torch.nn.utils.rnn import pad_sequence
 
 IGNORE_INDEX = -100
 
+glue_task_to_keys = {
+    "cola": ("sentence", None),
+    "mnli": ("premise", "hypothesis"),
+    "mrpc": ("sentence1", "sentence2"),
+    "qnli": ("question", "sentence"),
+    "qqp": ("question1", "question2"),
+    "rte": ("sentence1", "sentence2"),
+    "sst2": ("sentence", None),
+    "stsb": ("sentence1", "sentence2"),
+    "wnli": ("sentence1", "sentence2"),
+}
+
 @dataclass
 class DataCollatorForCausalLM(object):
     """Borrowed from qlora codebase."""
@@ -82,11 +94,31 @@ ALPACA_PROMPT_DICT = {
     ),
 }
 
+CLASSIFICATION_PROMPT_DICT = {
+    "prompt_input": (
+        "Below is an instruction that describes a task, paired with an input that provides further context. "
+        "Classify the input as one of the following categories: {categories}.\n\n"
+        "### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response: "
+    ),
+    "prompt_no_input": (
+        "Below is an instruction that describes a task. "
+        "Classify the input as one of the following categories: {categories}.\n\n"
+        "### Instruction:\n{instruction}\n\n### Response: "
+    ),
+}
+
 def extract_alpaca_dataset(example):
     if example.get("input", "") != "":
         prompt_format = ALPACA_PROMPT_DICT["prompt_input"]
     else:
         prompt_format = ALPACA_PROMPT_DICT["prompt_no_input"]
+    return {'input': prompt_format.format(**example)}
+
+def extract_classification_dataset(example):
+    if example.get("input", "") != "":
+        prompt_format = CLASSIFICATION_PROMPT_DICT["prompt_input"]
+    else:
+        prompt_format = CLASSIFICATION_PROMPT_DICT["prompt_no_input"]
     return {'input': prompt_format.format(**example)}
 
 def local_dataset(dataset_name):
@@ -143,6 +175,8 @@ def make_data_module(tokenizer: PreTrainedTokenizer, args) -> Dict:
             return load_dataset("timdettmers/openassistant-guanaco")
         elif dataset_name == 'vicuna':
             raise NotImplementedError("Vicuna data was not released.")
+        elif dataset_name == 'glue':
+            return load_dataset("glue", args.task_name)
         else:
             if os.path.exists(dataset_name):
                 try:
