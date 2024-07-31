@@ -6,7 +6,7 @@ from tqdm.auto import tqdm
 from model import get_model
 from loader.layers import param_count, layer_log
 from loader.data_module import make_data_module
-from traineval.eval import eval_func, calc_val_loss
+from utils.eval import eval_func, calc_val_loss
 import json
 import time
 import torch
