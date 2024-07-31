@@ -137,6 +137,10 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
         default=False,
         metadata={"help": "Whether to add layer norm to the layers being trained."}
     )
+    prompt_template_name: str = field(
+        default="alpaca",
+        metadata={"help": "Name of the prompt template to use."}
+    )
     train_on_source: Optional[bool] = field(
         default=False,
         metadata={"help": "Whether to train on the input in addition to the target text."}
