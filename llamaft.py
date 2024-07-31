@@ -301,7 +301,6 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
     val_losses = []
     train_losses = []
     weight_memory = memall()
-    train_loss, tr_steps = 0, 0
     total_time, forward_time, backward_time = 0, 0, 0
     input_memory, activation_memory, gradient_memory, optimizer_memory = 0, 0, 0, 0
     
@@ -311,7 +310,8 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
     for epoch in range(epochs):
         tick = 0
         step = 0
-        for step, batch in enumerate((train_dataloader)):
+        train_loss, tr_steps = 0, 0
+        for _, batch in enumerate((train_dataloader)):
             
             model.train()
             tick = time.time()
@@ -360,6 +360,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
                 print(f'Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Val Loss: {val_loss}')
                 if step == args.max_steps:
                     break
+            step += 1
         print(f'Epoch: {epoch} | Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Train Loss: {train_loss/tr_steps}')
 
     total_memory = memall()
