@@ -96,7 +96,7 @@ class DataArguments:
         metadata={"help": "Dataset format being used. [alpaca|chip2|self-instruct|hh-rlhf]"}
     )
     task_name: Optional[str] = field(
-        default=None,
+        default='mnli',
         metadata={"help": "Task name for GLUE datasets."}
     )
 
@@ -455,8 +455,14 @@ def main():
         args.freeze = False
         args.num_layers = 250
         args.learning_rate = 2e-7
+    
+    dt_name = args.dataset
+    if 'glue' in dt_name:
+        args.dataset = f'{args.dataset}/{args.task_name}'
     savepath = f"{args.output_dir}/{args.model_name_or_path}/seed_{args.seed}/{args.dataset}/lr_{args.learning_rate}/batch_{args.per_device_train_batch_size}/{args.sortby}{asc}/layers_{args.num_layers}"
     Path(savepath).mkdir(parents=True, exist_ok=True)
+    if 'glue' in dt_name:
+        args.dataset = dt_name
 
     model, tokenizer = get_model(args)
 

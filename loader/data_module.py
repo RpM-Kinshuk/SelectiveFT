@@ -10,22 +10,11 @@ from transformers import(
 
 )
 from dataclasses import dataclass
+from utils.generator import glue_data
 from datasets import load_dataset, Dataset
 from torch.nn.utils.rnn import pad_sequence
 
 IGNORE_INDEX = -100
-
-glue_task_to_keys = {
-    "cola": ("sentence", None),
-    "mnli": ("premise", "hypothesis"),
-    "mrpc": ("sentence1", "sentence2"),
-    "qnli": ("question", "sentence"),
-    "qqp": ("question1", "question2"),
-    "rte": ("sentence1", "sentence2"),
-    "sst2": ("sentence", None),
-    "stsb": ("sentence1", "sentence2"),
-    "wnli": ("sentence1", "sentence2"),
-}
 
 @dataclass
 class DataCollatorForCausalLM(object):
@@ -176,7 +165,21 @@ def make_data_module(tokenizer: PreTrainedTokenizer, args) -> Dict:
         elif dataset_name == 'vicuna':
             raise NotImplementedError("Vicuna data was not released.")
         elif dataset_name == 'glue':
-            return load_dataset("glue", args.task_name)
+            try:
+                raw_datasets = load_dataset(
+                    "glue", args.task_name, cache_dir=args.cache_dir
+                )
+                # is_regression = raw_datasets["train"].features["label"].dtype in ["float32", "float64"]  # type: ignore
+                is_regression = args.task_name == "stsb"
+                if not is_regression:
+                    # label_list = raw_datasets["train"].unique("label")  # type: ignore
+                    label_list = raw_datasets["train"].features["label"].names  # type: ignore
+                    num_labels = len(label_list)
+                
+                dataset = glue_data(args, tokenizer, raw_datasets)
+                return dataset
+            except:
+                raise ValueError(f"Error loading GLUE task {args.task_name}")
         else:
             if os.path.exists(dataset_name):
                 try:
@@ -215,10 +218,11 @@ def make_data_module(tokenizer: PreTrainedTokenizer, args) -> Dict:
         elif dataset_format == 'input-output':
             # leave as is
             pass
-        # Remove unused columns.
-        dataset = dataset.remove_columns(
-            [col for col in dataset.column_names['train'] if col not in ['input', 'output']]
-        )
+        if args.dataset != 'glue':
+            # Remove unused columns.
+            dataset = dataset.remove_columns(
+                [col for col in dataset.column_names['train'] if col not in ['input', 'output']]
+            )
         return dataset
 
      # Load dataset.
