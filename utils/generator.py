@@ -29,22 +29,27 @@ id_to_label = {
 
 def glue_data(args, tokenizer, raw_dataset):
 
-    task_to_keys = glue_task_to_keys
-    prompter = Prompter(args.prompt_template_name, verbose=False)
-
     device_map = "auto"
     world_size = int(os.environ.get("WORLD_SIZE", 1))
     ddp = world_size != 1
     if ddp:
         device_map = {"": int(os.environ.get("LOCAL_RANK") or 0)}
+    
+    prompter = Prompter(args.prompt_template_name, verbose=False)
+    task_to_keys = glue_task_to_keys
 
     if args.task_name is not None:
         sentence1_key, sentence2_key = task_to_keys[args.task_name]
     else:
         sentence1_key, sentence2_key = "sentence1", "sentence2"
+    
+    labels_description = ", ".join([f"{v}" for k, v in id_to_label[args.task_name].items()])
+    if ', ' in labels_description:
+        labels_description = labels_description.rsplit(', ', 1)
+        labels_description = ' or '.join(labels_description)
 
-    train_dataset = raw_dataset["train"] # type: ignore
-    eval_dataset = raw_dataset["validation_matched" if args.task_name == "mnli" else "validation"] # type: ignore
+    train_dataset = raw_dataset["train"]
+    eval_dataset = raw_dataset["validation_matched" if args.task_name == "mnli" else "validation"]
 
     def tokenize_prompt(data_point):
         instruction = "Classify the relationship between the following sentences:"
@@ -69,7 +74,7 @@ def glue_data(args, tokenizer, raw_dataset):
             tokenized_full_prompt["labels"] = [-100] * user_prompt_len + tokenized_full_prompt["labels"][user_prompt_len:]
     
     def create_prompt(data_point):
-        instruction = "Classify the relationship between the following sentences:"
+        instruction = f"Classify the relationship between the two sentences as {labels_description}."
         input = f"{sentence1_key}: {data_point[sentence1_key]}\n{sentence2_key}: {data_point[sentence2_key]}" if sentence2_key else data_point[sentence1_key]
         output = id_to_label[args.task_name][data_point['label']]
         text = prompter.generate_prompt(instruction, input, output)
