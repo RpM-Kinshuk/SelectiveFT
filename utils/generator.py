@@ -30,7 +30,7 @@ id_to_label = {
 def glue_data(args, tokenizer, raw_dataset):
 
     task_to_keys = glue_task_to_keys
-    prompter = Prompter(args.prompt_template_name, args.verbose)
+    prompter = Prompter(args.prompt_template_name, verbose=False)
 
     device_map = "auto"
     world_size = int(os.environ.get("WORLD_SIZE", 1))
