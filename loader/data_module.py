@@ -5,14 +5,11 @@ import copy
 import torch
 import pandas as pd
 from typing import Dict, Sequence
-from transformers import(
-    PreTrainedTokenizer,
-
-)
 from dataclasses import dataclass
 from utils.generator import glue_data
 from datasets import load_dataset, Dataset
 from torch.nn.utils.rnn import pad_sequence
+from transformers import PreTrainedTokenizer
 
 IGNORE_INDEX = -100
 
@@ -194,7 +191,7 @@ def make_data_module(tokenizer: PreTrainedTokenizer, args) -> Dict:
     def format_dataset(dataset, dataset_format):
         if (
             dataset_format == 'alpaca' or dataset_format == 'alpaca-clean' or
-            (dataset_format is None and args.dataset in ['alpaca', 'alpaca-clean'])
+            (dataset_format is None and args.dataset in ['alpaca', 'alpaca-clean', 'glue'])
         ):
             dataset = dataset.map(extract_alpaca_dataset, remove_columns=['instruction'])
         elif dataset_format == 'chip2' or (dataset_format is None and args.dataset == 'chip2'):
@@ -218,11 +215,9 @@ def make_data_module(tokenizer: PreTrainedTokenizer, args) -> Dict:
         elif dataset_format == 'input-output':
             # leave as is
             pass
-        if args.dataset != 'glue':
-            # Remove unused columns.
-            dataset = dataset.remove_columns(
-                [col for col in dataset.column_names['train'] if col not in ['input', 'output']]
-            )
+        dataset = dataset.remove_columns(
+            [col for col in dataset.column_names['train'] if col not in ['input', 'output']]
+        )
         return dataset
 
      # Load dataset.
