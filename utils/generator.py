@@ -1,9 +1,9 @@
 import os
 import random
-from datasets import load_dataset, Dataset, DatasetDict
+from datasets import Dataset, DatasetDict
 from utils.prompter import Prompter
 
-glue_task_to_keys = {  # Done
+glue_task_to_keys = {
     "cola": ("sentence", None),
     "mnli": ("premise", "hypothesis"),
     "mrpc": ("sentence1", "sentence2"),
@@ -70,24 +70,33 @@ def glue_data(args, tokenizer, raw_dataset):
     
     def create_prompt(data_point):
         instruction = "Classify the relationship between the following sentences:"
-        input_text = f"{data_point[sentence1_key]}\n{data_point[sentence2_key]}" if sentence2_key else data_point[sentence1_key]
-        output_text = id_to_label[args.task_name][data_point['label']]
-        full_prompt = prompter.generate_prompt(instruction, input_text, output_text)
-        return full_prompt
+        input = f"{sentence1_key}: {data_point[sentence1_key]}\n{sentence2_key}: {data_point[sentence2_key]}" if sentence2_key else data_point[sentence1_key]
+        output = id_to_label[args.task_name][data_point['label']]
+        text = prompter.generate_prompt(instruction, input, output)
+        return {
+            "instruction": instruction,
+            "input": input,
+            "output": output,
+            "text": text
+        }
 
-    train_prompts = [create_prompt(data_point) for data_point in train_dataset]
-    eval_prompts = [create_prompt(data_point) for data_point in eval_dataset]
+    def create_dataset_dict(dataset):
+        prompts = [create_prompt(data_point) for data_point in dataset]
+        return Dataset.from_dict({
+            "instruction": [p["instruction"] for p in prompts],
+            "input": [p["input"] for p in prompts],
+            "output": [p["output"] for p in prompts],
+            "text": [p["text"] for p in prompts]
+        })
 
-    # ds_train = Dataset.from_dict({"text": train_instructions})
-    # ds_validation = Dataset.from_dict({"text": validation_instructions})
-    # instructions_ds_dict = DatasetDict({"train": ds_train, "eval": ds_validation})
+    dataset_dict = DatasetDict({
+        "train": create_dataset_dict(train_dataset),
+        "eval": create_dataset_dict(eval_dataset)
+    })
 
     if args.verbose:
-        print("Example of a train prompt:", train_prompts[0])
-        for index in random.sample(range(len(train_dataset)), 3):
-            print(f"Sample {index} of train set: {train_dataset[index]}")
+        print("Example of a train prompt:", dataset_dict['train'][0])
+        for index in random.sample(range(len(dataset_dict['train'])), 3):
+            print(f"Sample {index} of train set: {dataset_dict['train'][index]}")
 
-    return {
-        'train': train_prompts if args.do_train else None,
-        'eval': eval_prompts if args.do_eval else None
-    }
+    return dataset_dict
