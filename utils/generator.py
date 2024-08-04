@@ -27,7 +27,7 @@ id_to_label = {
     "wnli": {0: "not_entailment", 1: "entailment"}
 }
 
-def glue_data(args, tokenizer, raw_dataset):
+def glue_data(args, tokenizer, raw_dataset, prompter=None):
 
     device_map = "auto"
     world_size = int(os.environ.get("WORLD_SIZE", 1))
@@ -35,7 +35,8 @@ def glue_data(args, tokenizer, raw_dataset):
     if ddp:
         device_map = {"": int(os.environ.get("LOCAL_RANK") or 0)}
     
-    prompter = Prompter(args.prompt_template_name, verbose=False)
+    if prompter is None:
+        prompter = Prompter(args.prompt_template_name, verbose=False)
     task_to_keys = glue_task_to_keys
 
     if args.task_name is not None:
