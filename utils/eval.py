@@ -12,7 +12,7 @@ def eval_func(args, logger, trainer, all_metrics):
         all_metrics.update(metrics)
     return all_metrics
 
-def calc_val_loss(model, eval_dataloader, disable_tqdm=True):
+def calc_val_loss(args, model, eval_dataloader, disable_tqdm=True):
     """
     Args:
         model (_type_): _description_

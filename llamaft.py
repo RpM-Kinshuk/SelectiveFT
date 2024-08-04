@@ -362,7 +362,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
 
             if step == args.max_steps or step % args.eval_steps == 0 or step == 0:
                 model.eval()
-                val_loss, val_acc = calc_val_loss(model, eval_dataloader)
+                val_loss, val_acc = calc_val_loss(args, model, eval_dataloader)
                 val_losses.append(val_loss)
                 val_accs.append(val_acc)
                 print(f'Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Val Loss: {val_loss}')
