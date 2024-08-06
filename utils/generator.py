@@ -75,7 +75,8 @@ def glue_data(args, tokenizer, raw_dataset, prompter=None):
             tokenized_full_prompt["labels"] = [-100] * user_prompt_len + tokenized_full_prompt["labels"][user_prompt_len:]
     
     def create_prompt(data_point):
-        instruction = f"Classify the relationship between the two sentences as {labels_description}."
+        instruction = f"Classify the relationship between the two sentences as {labels_description}." if sentence2_key \
+            else f"Classify the sentence as {labels_description}."
         input = f"{sentence1_key}: {data_point[sentence1_key]}\n{sentence2_key}: {data_point[sentence2_key]}" if sentence2_key else data_point[sentence1_key]
         output = id_to_label[args.task_name][data_point['label']]
         text = prompter.generate_prompt(instruction, input, output)
