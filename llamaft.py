@@ -357,7 +357,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
             times.append(total_time)
             
             if step % 500 == 0:
-                print(f'Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Train Loss: {train_loss/tr_steps}')
+                print(f'Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Val Loss: {val_loss} | Val Acc: {val_acc}')
             torch.cuda.empty_cache()
 
             if step == args.max_steps or step % args.eval_steps == 0 or step == 0:
