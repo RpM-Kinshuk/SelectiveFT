@@ -357,7 +357,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
             times.append(total_time)
             
             if step % 500 == 0:
-                print(f'Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Val Loss: {val_loss} | Val Acc: {val_acc}')
+                print(f'Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Train Loss: {train_loss/tr_steps}')
             torch.cuda.empty_cache()
 
             if step == args.max_steps or step % args.eval_steps == 0 or step == 0:
@@ -365,7 +365,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
                 val_loss, val_acc = calc_val_loss(args, model, tokenizer, eval_dataloader, data_module['eval_dataset'] if 'glue' in args.dataset else None)
                 val_losses.append(val_loss)
                 val_accs.append(val_acc)
-                print(f'Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Val Loss: {val_loss}')
+                print(f'Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Val Loss: {val_loss} | Val Acc: {val_acc}')
                 if step == args.max_steps:
                     break
             step += 1
