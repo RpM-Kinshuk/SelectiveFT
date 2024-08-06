@@ -58,7 +58,7 @@ def calc_val_loss(args, model, tokenizer, eval_dataloader, eval_dataset=None, di
     val_examples = 0
     model.eval()
     if eval_dataset is not None:
-        acc = calc_acc(args, model, tokenizer, eval_dataset, disable_tqdm)
+        val_acc = calc_acc(args, model, tokenizer, eval_dataset, disable_tqdm)
     with torch.no_grad():
 
         for step, batch in enumerate(tqdm(eval_dataloader, desc="Evaluating", leave=False, disable=disable_tqdm)):
