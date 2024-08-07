@@ -313,7 +313,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
     input_memory, activation_memory, gradient_memory, optimizer_memory = 0, 0, 0, 0
     
     model.train()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
     optimizer.zero_grad()
     for epoch in range(epochs):
         tick = 0
@@ -456,13 +456,11 @@ def main():
         args.num_layers = 250
         args.learning_rate = 2e-7
     
-    dt_name = args.dataset
+    dt_name = str(args.dataset)
     if 'glue' in dt_name:
-        args.dataset = f'{args.dataset}/{args.task_name}'
-    savepath = f"{args.output_dir}/{args.model_name_or_path}/seed_{args.seed}/{args.dataset}/lr_{args.learning_rate}/batch_{args.per_device_train_batch_size}/{args.sortby}{asc}/layers_{args.num_layers}"
+        dt_name = f'{dt_name}/{args.task_name}'
+    savepath = f"{args.output_dir}/{args.model_name_or_path}/seed_{args.seed}/{dt_name}/lr_{args.learning_rate}/batch_{args.per_device_train_batch_size}/{args.sortby}{asc}/layers_{args.num_layers}"
     Path(savepath).mkdir(parents=True, exist_ok=True)
-    if 'glue' in dt_name:
-        args.dataset = dt_name
 
     model, tokenizer = get_model(args)
 
