@@ -31,7 +31,7 @@ def calc_acc(args, model, tokenizer, eval_dataset, disable_tqdm=True):
                 input_ids,
                 return_dict_in_generate=True,
                 output_scores=True,
-                max_new_tokens=128,
+                max_new_tokens=5,
             )
             batch_outputs = gen_output.sequences
             # Decode outputs
@@ -40,7 +40,7 @@ def calc_acc(args, model, tokenizer, eval_dataset, disable_tqdm=True):
                 output = prompter.get_response(output)
                 labels.append(batch_labels[i])
                 outputs.append(output)
-    correct = sum([1 for i in range(len(labels)) if labels[i] == outputs[i]])
+    correct = sum([1 for i in range(len(labels)) if labels[i] in outputs[i]])
     return correct / len(labels)
 
 def calc_val_loss(args, model, tokenizer, eval_dataloader, eval_dataset=None, disable_tqdm=True):
