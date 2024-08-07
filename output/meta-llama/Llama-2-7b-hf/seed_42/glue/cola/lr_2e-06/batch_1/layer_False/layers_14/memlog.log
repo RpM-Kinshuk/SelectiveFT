@@ -1,0 +1,23 @@
+2024-08-06 22:54:28;INFO;
+
+glue Seed 42Batch Size 1 layer_False fine-tuning 14 Layers
+2024-08-06 22:54:28;INFO;
+Total param      : 6738.423808
+Train param      : 404.750336
+Dataset          : glue
+Method           : layer
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Eval Loss        : 0.15611223876476288
+Forward time     : 3.117261799176534 min
+Backward time    : 0.5756461461385091 min
+Weight memory    : 26953.711616 MB
+Optimizer memory : 3238.002688 MB
+Activation memory: 58.83987982130745 MB
+Gradient memory  : 1646.7683797787392 MB
+Input memory     : 0.00256 MB
+Total memory     : 31839.591424 MB
+Peak memory      : 33462.560768 MB
+
+
