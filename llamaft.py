@@ -6,7 +6,7 @@ from tqdm.auto import tqdm
 from model import get_model
 from loader.layers import param_count, layer_log
 from loader.data_module import make_data_module
-from utils.eval import eval_func, calc_val_loss
+from utils.eval import eval_func, calc_val_loss, calc_acc
 import json
 import time
 import torch
@@ -302,7 +302,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
     for device in range(gpus):
         reset_peak_memory_stats(device=device)
         reset_max_memory_allocated(device=device)
-    epochs = 3 if args.dataset == 'oasst1' else 1
+    epochs = 1
     
     times = []
     val_accs = []
@@ -382,9 +382,12 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
                     args=training_args,
                     **{k:v for k,v in data_module.items() if k != 'predict_dataset'},
                 )
+    val_acc = 0
     all_metrics = {"run_name": args.run_name}
     if args.do_eval:
         all_metrics = eval_func(args, logger, trainer, all_metrics)
+        if args.dataset == 'glue':
+            val_acc = calc_acc(args, model, tokenizer, data_module['eval_dataset'])
 
     base = {"train_loss": train_losses, "val_loss": val_losses, "val_acc": val_accs, "time": times}
     memory_dict = {
@@ -396,6 +399,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
         "batch_size": args.per_device_train_batch_size,
         "lr": args.learning_rate,
         "eval_loss": all_metrics["eval_loss"],
+        "eval_acc": val_acc,
         "forward_time": forward_time / 60,
         "backward_time": backward_time / 60,
         "weight_mem": weight_memory / 1e6,
@@ -496,7 +500,10 @@ def main():
         f"Layers           : {memory_dict['layers']}\n"
         f"Batch size       : {memory_dict['batch_size']}\n"
         f"Learning Rate    : {memory_dict['lr']}\n"
+        f"Train Samples    : {len(dataset['train_dataset'])}\n"
+        f"Eval Samples     : {len(dataset['eval_dataset'])}\n"
         f"Eval Loss        : {memory_dict['eval_loss']}\n"
+        f"Eval Acc         : {memory_dict['eval_acc']}\n"
         f"Forward time     : {memory_dict['forward_time']} min\n"
         f"Backward time    : {memory_dict['backward_time']} min\n"
         f"Weight memory    : {memory_dict['weight_mem']} MB\n"
