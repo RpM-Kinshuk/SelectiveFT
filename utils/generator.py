@@ -29,11 +29,11 @@ id_to_label = {
 
 def glue_data(args, tokenizer, raw_dataset, prompter=None):
 
-    device_map = "auto"
-    world_size = int(os.environ.get("WORLD_SIZE", 1))
-    ddp = world_size != 1
-    if ddp:
-        device_map = {"": int(os.environ.get("LOCAL_RANK") or 0)}
+    # device_map = "auto"
+    # world_size = int(os.environ.get("WORLD_SIZE", 1))
+    # ddp = world_size != 1
+    # if ddp:
+    #     device_map = {"": int(os.environ.get("LOCAL_RANK") or 0)}
     
     if prompter is None:
         prompter = Prompter(args.prompt_template_name, verbose=False)
