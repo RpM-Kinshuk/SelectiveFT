@@ -302,24 +302,26 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
     for device in range(gpus):
         reset_peak_memory_stats(device=device)
         reset_max_memory_allocated(device=device)
+    tick = 0
     epochs = 1
-    
     times = []
+    val_acc = 0
     val_accs = []
     val_losses = []
     train_losses = []
     weight_memory = memall()
+    all_metrics = {"run_name": args.run_name}
     total_time, forward_time, backward_time = 0, 0, 0
     input_memory, activation_memory, gradient_memory, optimizer_memory = 0, 0, 0, 0
     
     model.train()
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
     optimizer.zero_grad()
+    train_loss, tr_steps = 0, 0
+    
     for epoch in range(epochs):
-        tick = 0
-        step = 0
-        train_loss, tr_steps = 0, 0
-        for _, batch in enumerate((train_dataloader)):
+        
+        for step, batch in enumerate((train_dataloader)):
             
             model.train()
             tick = time.time()
@@ -344,31 +346,31 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
 
             curr = memall()
             optimizer.step()
-            if step == 0:
+            if tr_steps == 0:
                 optimizer_memory = (memall() - curr)
                 if 'lora' not in args.sortby:
                     layer_log(args, model, savepath)
         
             loss = loss.cpu()
             train_loss += loss.item()
-            tr_steps += 1
-            train_losses.append(train_loss/tr_steps)
+            train_losses.append(train_loss/(tr_steps+1))
             total_time += time.time() - tick
             times.append(total_time)
-            
-            if step % 500 == 0:
-                print(f'Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Train Loss: {train_loss/tr_steps}')
+
+            if tr_steps % 500 == 0:
+                print(f'Seed:{args.seed} | {args.dataset}/{args.task_name} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {tr_steps} | Train Loss: {train_loss/(tr_steps+1)}')
             torch.cuda.empty_cache()
 
-            if step == args.max_steps or step % args.eval_steps == 0 or step == 0:
+            if tr_steps >= args.max_steps or tr_steps % args.eval_steps == 0:
                 model.eval()
                 val_loss, val_acc = calc_val_loss(args, model, tokenizer, eval_dataloader, data_module['eval_dataset'] if 'glue' in args.dataset else None)
                 val_losses.append(val_loss)
                 val_accs.append(val_acc)
-                print(f'Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {step} | Val Loss: {val_loss} | Val Acc: {val_acc}')
-                if step == args.max_steps:
+                print(f'Seed:{args.seed} | {args.dataset}/{args.task_name} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {tr_steps} | Val Loss: {val_loss} | Val Acc: {val_acc}')
+                if tr_steps >= args.max_steps:
+                    tr_steps += 1
                     break
-            step += 1
+            tr_steps += 1
         print(f'Epoch: {epoch} | Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Train Loss: {train_loss/tr_steps}')
 
     total_memory = memall()
@@ -382,8 +384,6 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
                     args=training_args,
                     **{k:v for k,v in data_module.items() if k != 'predict_dataset'},
                 )
-    val_acc = 0
-    all_metrics = {"run_name": args.run_name}
     if args.do_eval:
         all_metrics = eval_func(args, logger, trainer, all_metrics)
         if args.dataset == 'glue':
@@ -404,9 +404,9 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
         "backward_time": backward_time / 60,
         "weight_mem": weight_memory / 1e6,
         "optimizer_mem": optimizer_memory / 1e6,
-        "activation_mem": (activation_memory / step) / 1e6,
-        "grad_mem": (gradient_memory / step) / 1e6,
-        "input_mem": (input_memory / step) / 1e6,
+        "activation_mem": (activation_memory / tr_steps) / 1e6,
+        "grad_mem": (gradient_memory / tr_steps) / 1e6,
+        "input_mem": (input_memory / tr_steps) / 1e6,
         "total_mem": total_memory / 1e6,
         "peak_mem": peek_memory / 1e6,
     }
@@ -458,7 +458,7 @@ def main():
     if 'full' in args.sortby:
         args.freeze = False
         args.num_layers = 250
-        args.learning_rate = 2e-7
+        # args.learning_rate = 2e-7
     
     dt_name = str(args.dataset)
     if 'glue' in dt_name:
