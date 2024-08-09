@@ -305,7 +305,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
         reset_peak_memory_stats(device=device)
         reset_max_memory_allocated(device=device)
     tick = 0
-    epochs = 1
+    epochs = 2
     times = []
     val_acc = 0
     val_accs = []
@@ -323,7 +323,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
     
     for epoch in range(epochs):
         
-        for step, batch in tqdm(enumerate(train_dataloader), total=len(train_dataloader), desc=f"Epoch {epoch}", disable=not args.verbose):
+        for step, batch in tqdm(enumerate(train_dataloader), total=len(train_dataloader), desc=f"Epoch {epoch}", disable=False):
             
             model.train()
             tick = time.time()
@@ -360,7 +360,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
             times.append(total_time)
 
             if tr_steps % 500 == 0 and args.verbose:
-                print(f'Seed:{args.seed} | {args.dataset}/{args.task_name} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {tr_steps} | Train Loss: {train_loss/(tr_steps+1)}.4f')
+                print(f'Seed:{args.seed} | {args.dataset}/{args.task_name} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {tr_steps} | Train Loss: {(train_loss/(tr_steps+1)):.4f}')
             torch.cuda.empty_cache()
 
             if tr_steps >= args.max_steps or tr_steps % args.eval_steps == 0:
@@ -369,12 +369,12 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
                 val_losses.append(val_loss)
                 val_accs.append(val_acc)
                 if args.verbose:
-                    print(f'Seed:{args.seed} | {args.dataset}/{args.task_name} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {tr_steps} | Val Loss: {val_loss}.4f | Val Acc: {val_acc}.4f')
+                    print(f'Seed:{args.seed} | {args.dataset}/{args.task_name} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Step: {tr_steps} | Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}')
                 if tr_steps >= args.max_steps:
                     tr_steps += 1
                     break
             tr_steps += 1
-        print(f'Epoch: {epoch} | Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Train Loss: {train_loss/tr_steps}.4f')
+        print(f'Epoch: {epoch} | Seed:{args.seed} | {args.dataset} | {args.sortby}_{args.num_layers}_{args.sort_ascending} | Train Loss: {(train_loss/tr_steps):.4f}')
 
     total_memory = memall()
     peek_memory = sum([max_memory_allocated(i) for i in range(gpus)])
