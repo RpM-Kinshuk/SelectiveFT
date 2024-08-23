@@ -1,1 +1,1 @@
-{"run_name": "/jumbo/yaoqingyang/kinshuk/LlaMAft/output", "eval_loss": 0.13138391077518463, "eval_runtime": 22.4205, "eval_samples_per_second": 46.52, "eval_steps_per_second": 5.843}
+{"run_name": "/jumbo/yaoqingyang/kinshuk/LlaMAft/output", "eval_loss": 0.12949027121067047, "eval_model_preparation_time": 0.0034, "eval_runtime": 23.5866, "eval_samples_per_second": 44.22, "eval_steps_per_second": 5.554}

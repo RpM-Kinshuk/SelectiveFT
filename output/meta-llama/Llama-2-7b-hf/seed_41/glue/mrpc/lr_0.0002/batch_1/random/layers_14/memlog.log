@@ -1,0 +1,26 @@
+2024-08-12 00:24:01;INFO;
+
+Glue/mrpc Seed 41 Batch Size 1 random 14 Layers
+2024-08-12 00:24:01;INFO;
+Total param      : 6738.423808
+Train param      : 319.81568
+Dataset          : glue
+Method           : random
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 0.0002
+Train Samples    : 3668
+Eval Samples     : 408
+Eval Loss        : 0.2843881845474243
+Eval Acc         : 0.6838235294117647
+Forward time     : 3.8650371630986533 min
+Backward time    : 7.344950608412424 min
+Weight memory    : 26953.712128 MB
+Optimizer memory : 2558.52544 MB
+Activation memory: 1095.158393648855 MB
+Gradient memory  : 1314.4212739629227 MB
+Input memory     : 0.0033366543075245363 MB
+Total memory     : 30824.927232 MB
+Peak memory      : 32115.070464 MB
+
+

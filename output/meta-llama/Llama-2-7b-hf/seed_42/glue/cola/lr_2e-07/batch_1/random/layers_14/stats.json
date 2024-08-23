@@ -1,0 +1,21 @@
+{
+    "total_param": 6738.423808,
+    "train_param": 433.061888,
+    "dataset": "glue",
+    "method": "random",
+    "layers": 14,
+    "batch_size": 1,
+    "lr": 2e-07,
+    "Steps": 17102,
+    "eval_loss": 0.15559294819831848,
+    "eval_acc": 0.8427612655800575,
+    "forward_time": 6.296847291787466,
+    "backward_time": 15.279859248797099,
+    "weight_mem": 26953.712128,
+    "optimizer_mem": 3464.495104,
+    "activation_mem": 592.5737823412466,
+    "grad_mem": 1760.0270022069933,
+    "input_mem": 0.00256,
+    "total_mem": 32177.66656,
+    "peak_mem": 33916.297216
+}

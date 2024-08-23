@@ -1,0 +1,104 @@
+2024-08-09 13:25:34;INFO;
+
+glue Seed 42Batch Size 1 full fine-tuning 250 Layers
+2024-08-09 13:25:34;INFO;
+Total param      : 6738.423808
+Train param      : 6738.423808
+Dataset          : glue
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 0.0002
+Train Samples    : 8551
+Eval Samples     : 1043
+Eval Loss        : 0.28375616669654846
+Eval Acc         : 0.6912751677852349
+Forward time     : 10.983511018753052 min
+Backward time    : 24.949270077546437 min
+Weight memory    : 27478.000128 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 869.0845914667291 MB
+Gradient memory  : 26555.17377962437 MB
+Input memory     : 0.00256 MB
+Total memory     : 107892.302848 MB
+Peak memory      : 135376.86016 MB
+
+
+2024-08-19 00:17:54;INFO;
+
+Glue/cola Seed 42 Batch Size 1 full 250 Layers
+2024-08-19 00:17:54;INFO;
+Total param      : 6738.423808
+Train param      : 6738.423808
+Dataset          : glue
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 0.0002
+Train Samples    : 8551
+Eval Samples     : 1043
+Eval Loss        : 0.28375616669654846
+Eval Acc         : 0.6912751677852349
+Forward time     : 11.299447524547578 min
+Backward time    : 23.409276926517485 min
+Weight memory    : 27478.000128 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 869.0845914667291 MB
+Gradient memory  : 26555.17377962437 MB
+Input memory     : 0.00256 MB
+Total memory     : 107892.302848 MB
+Peak memory      : 135376.86016 MB
+
+
+2024-08-20 17:43:34;INFO;
+
+Glue/cola Seed 42 Batch Size 1 full 250 Layers
+2024-08-20 17:43:34;INFO;
+Total param      : 6738.423808
+Train param      : 6738.423808
+Dataset          : glue
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 0.0002
+Train Samples    : 8551
+Eval Samples     : 1043
+Eval Loss        : 0.28375616669654846
+Eval Acc         : 0.6912751677852349
+Forward time     : 11.394770054022471 min
+Backward time    : 22.006589150428773 min
+Weight memory    : 27478.000128 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 869.0845914667291 MB
+Gradient memory  : 26555.17377962437 MB
+Input memory     : 0.00256 MB
+Total memory     : 107892.302848 MB
+Peak memory      : 135376.86016 MB
+
+
+2024-08-22 04:14:09;INFO;
+
+Glue/cola Seed 42 Batch Size 1 full 250 Layers
+2024-08-22 04:14:09;INFO;
+Total param      : 6738.423808
+Train param      : 6738.423808
+Dataset          : glue
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 0.0002
+Train Samples    : 8551
+Eval Samples     : 1043
+Eval Loss        : 0.28375616669654846
+Eval Acc         : 0.6912751677852349
+Forward time     : 10.653636876742045 min
+Backward time    : 23.414777306715646 min
+Weight memory    : 27478.000128 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 869.0845914667291 MB
+Gradient memory  : 26555.17377962437 MB
+Input memory     : 0.00256 MB
+Total memory     : 107892.302848 MB
+Peak memory      : 135376.86016 MB
+
+

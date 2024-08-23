@@ -1,0 +1,78 @@
+2024-08-10 04:36:55;INFO;
+
+Glue/cola Seed 42 Batch Size 1 full 250 Layers
+2024-08-10 04:36:55;INFO;
+Total param      : 6738.423808
+Train param      : 6738.423808
+Dataset          : glue
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 2e-06
+Train Samples    : 8551
+Eval Samples     : 1043
+Eval Loss        : 0.12453419715166092
+Eval Acc         : 0.887823585810163
+Forward time     : 10.816398823261261 min
+Backward time    : 23.919210652510326 min
+Weight memory    : 27478.000128 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 869.0846479298328 MB
+Gradient memory  : 27031.852186360426 MB
+Input memory     : 0.00256 MB
+Total memory     : 108416.590848 MB
+Peak memory      : 135376.86016 MB
+
+
+2024-08-19 20:33:49;INFO;
+
+Glue/cola Seed 42 Batch Size 1 full 250 Layers
+2024-08-19 20:33:49;INFO;
+Total param      : 6738.423808
+Train param      : 6738.423808
+Dataset          : glue
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 2e-06
+Train Samples    : 8551
+Eval Samples     : 1043
+Eval Loss        : 0.12453419715166092
+Eval Acc         : 0.887823585810163
+Forward time     : 11.91956958770752 min
+Backward time    : 21.467379891872405 min
+Weight memory    : 27478.000128 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 869.0846479298328 MB
+Gradient memory  : 27031.852186360426 MB
+Input memory     : 0.00256 MB
+Total memory     : 108416.590848 MB
+Peak memory      : 135376.86016 MB
+
+
+2024-08-23 00:38:09;INFO;
+
+Glue/cola Seed 42 Batch Size 1 full 250 Layers
+2024-08-23 00:38:09;INFO;
+Total param      : 6738.423808
+Train param      : 6738.423808
+Dataset          : glue
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 2e-06
+Train Samples    : 8551
+Eval Samples     : 1043
+Eval Loss        : 0.12453419715166092
+Eval Acc         : 0.887823585810163
+Forward time     : 11.358978911240895 min
+Backward time    : 21.65688698689143 min
+Weight memory    : 27478.000128 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 869.0846479298328 MB
+Gradient memory  : 27031.852186360426 MB
+Input memory     : 0.00256 MB
+Total memory     : 108416.590848 MB
+Peak memory      : 135376.86016 MB
+
+

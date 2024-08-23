@@ -1,0 +1,104 @@
+2024-08-09 03:44:51;INFO;
+
+glue Seed 42Batch Size 1 full fine-tuning 250 Layers
+2024-08-09 03:44:51;INFO;
+Total param      : 6738.423808
+Train param      : 6738.423808
+Dataset          : glue
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 2e-06
+Train Samples    : 3668
+Eval Samples     : 408
+Eval Loss        : 0.1395278126001358
+Eval Acc         : 0.8897058823529411
+Forward time     : 4.242193245887757 min
+Backward time    : 10.36984281539917 min
+Weight memory    : 27478.000128 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 1569.6268992628136 MB
+Gradient memory  : 26654.480189487458 MB
+Input memory     : 0.0033366543075245363 MB
+Total memory     : 107898.830848 MB
+Peak memory      : 135387.69664 MB
+
+
+2024-08-19 12:31:21;INFO;
+
+Glue/mrpc Seed 42 Batch Size 1 full 250 Layers
+2024-08-19 12:31:21;INFO;
+Total param      : 6738.423808
+Train param      : 6738.423808
+Dataset          : glue
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 2e-06
+Train Samples    : 3668
+Eval Samples     : 408
+Eval Loss        : 0.14425751566886902
+Eval Acc         : 0.8921568627450981
+Forward time     : 4.361543583869934 min
+Backward time    : 10.855362021923066 min
+Weight memory    : 27478.000128 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 1569.629163480916 MB
+Gradient memory  : 26653.6225755289 MB
+Input memory     : 0.0033366543075245363 MB
+Total memory     : 107898.830848 MB
+Peak memory      : 135387.69664 MB
+
+
+2024-08-21 05:40:57;INFO;
+
+Glue/mrpc Seed 42 Batch Size 1 full 250 Layers
+2024-08-21 05:40:57;INFO;
+Total param      : 6738.423808
+Train param      : 6738.423808
+Dataset          : glue
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 2e-06
+Train Samples    : 3668
+Eval Samples     : 408
+Eval Loss        : 0.14425751566886902
+Eval Acc         : 0.8921568627450981
+Forward time     : 4.231026502450307 min
+Backward time    : 10.593618241945903 min
+Weight memory    : 27478.000128 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 1569.629163480916 MB
+Gradient memory  : 26653.6225755289 MB
+Input memory     : 0.0033366543075245363 MB
+Total memory     : 107898.830848 MB
+Peak memory      : 135387.69664 MB
+
+
+2024-08-22 16:34:28;INFO;
+
+Glue/mrpc Seed 42 Batch Size 1 full 250 Layers
+2024-08-22 16:34:28;INFO;
+Total param      : 6738.423808
+Train param      : 6738.423808
+Dataset          : glue
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 2e-06
+Train Samples    : 3668
+Eval Samples     : 408
+Eval Loss        : 0.14425751566886902
+Eval Acc         : 0.8921568627450981
+Forward time     : 4.094212893644968 min
+Backward time    : 10.049183360735576 min
+Weight memory    : 27478.000128 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 1569.629163480916 MB
+Gradient memory  : 26653.6225755289 MB
+Input memory     : 0.0033366543075245363 MB
+Total memory     : 107898.830848 MB
+Peak memory      : 135387.69664 MB
+
+

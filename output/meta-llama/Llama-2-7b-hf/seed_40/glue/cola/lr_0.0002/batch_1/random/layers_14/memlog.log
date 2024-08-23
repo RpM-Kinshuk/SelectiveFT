@@ -1,0 +1,26 @@
+2024-08-11 17:21:09;INFO;
+
+Glue/cola Seed 40 Batch Size 1 random 14 Layers
+2024-08-11 17:21:09;INFO;
+Total param      : 6738.423808
+Train param      : 376.438784
+Dataset          : glue
+Method           : random
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 0.0002
+Train Samples    : 8551
+Eval Samples     : 1043
+Eval Loss        : 0.1754256784915924
+Eval Acc         : 0.8418024928092043
+Forward time     : 6.339256831010183 min
+Backward time    : 14.837400090694427 min
+Weight memory    : 26953.712128 MB
+Optimizer memory : 3011.510272 MB
+Activation memory: 583.9101717525435 MB
+Gradient memory  : 1533.3051321585779 MB
+Input memory     : 0.00256 MB
+Total memory     : 31498.061312 MB
+Peak memory      : 33009.320448 MB
+
+

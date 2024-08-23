@@ -1,7 +1,7 @@
-2024-08-06 22:54:28;INFO;
+2024-08-10 03:40:13;INFO;
 
-glue Seed 42Batch Size 1 layer_False fine-tuning 14 Layers
-2024-08-06 22:54:28;INFO;
+Glue/cola Seed 42 Batch Size 1 layer_False 14 Layers
+2024-08-10 03:40:13;INFO;
 Total param      : 6738.423808
 Train param      : 404.750336
 Dataset          : glue
@@ -9,15 +9,44 @@ Method           : layer
 Layers           : 14
 Batch size       : 1
 Learning Rate    : 2e-06
-Eval Loss        : 0.15611223876476288
-Forward time     : 3.117261799176534 min
-Backward time    : 0.5756461461385091 min
-Weight memory    : 26953.711616 MB
+Train Samples    : 8551
+Eval Samples     : 1043
+Eval Loss        : 0.24897034466266632
+Eval Acc         : 0.6912751677852349
+Forward time     : 0.08304729461669921 min
+Backward time    : 0.024619118372599284 min
+Weight memory    : 26953.712128 MB
 Optimizer memory : 3238.002688 MB
-Activation memory: 58.83987982130745 MB
-Gradient memory  : 1646.7683797787392 MB
+Activation memory: 58.815780571428576 MB
+Gradient memory  : 1646.851902984127 MB
 Input memory     : 0.00256 MB
-Total memory     : 31839.591424 MB
-Peak memory      : 33462.560768 MB
+Total memory     : 31838.695936 MB
+Peak memory      : 33460.25728 MB
+
+
+2024-08-10 17:04:35;INFO;
+
+Glue/cola Seed 42 Batch Size 1 layer_False 14 Layers
+2024-08-10 17:04:35;INFO;
+Total param      : 6738.423808
+Train param      : 404.750336
+Dataset          : glue
+Method           : layer
+Layers           : 14
+Batch size       : 1
+Learning Rate    : 2e-06
+Train Samples    : 8551
+Eval Samples     : 1043
+Eval Loss        : 0.1439981460571289
+Eval Acc         : 0.8935762224352828
+Forward time     : 5.815989355246226 min
+Backward time    : 1.392390747865041 min
+Weight memory    : 26953.712128 MB
+Optimizer memory : 3238.002688 MB
+Activation memory: 58.45634523774997 MB
+Gradient memory  : 1646.788091479359 MB
+Input memory     : 0.00256 MB
+Total memory     : 31838.048256 MB
+Peak memory      : 33462.56128 MB
 
 
