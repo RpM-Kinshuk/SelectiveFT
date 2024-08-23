@@ -323,7 +323,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
     
     for epoch in range(epochs):
         
-        for step, batch in tqdm(enumerate(train_dataloader), total=len(train_dataloader), desc=f"Epoch {epoch}", disable=False):
+        for step, batch in tqdm(enumerate(train_dataloader), total=len(train_dataloader), desc=f"Epoch {epoch}/{epochs-1}", disable=False):
             
             model.train()
             tick = time.time()
@@ -401,6 +401,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
         "layers": args.num_layers,
         "batch_size": args.per_device_train_batch_size,
         "lr": args.learning_rate,
+        "Steps": tr_steps,
         "eval_loss": all_metrics["eval_loss"],
         "eval_acc": val_acc,
         "forward_time": forward_time / 60,
