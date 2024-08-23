@@ -76,3 +76,29 @@ Total memory     : 107898.830848 MB
 Peak memory      : 135387.69664 MB
 
 
+2024-08-23 03:12:03;INFO;
+
+Glue/mrpc Seed 42 Batch Size 1 full 250 Layers
+2024-08-23 03:12:03;INFO;
+Total param      : 6738.423808
+Train param      : 6738.423808
+Dataset          : glue
+Method           : full
+Layers           : 250
+Batch size       : 1
+Learning Rate    : 2e-07
+Train Samples    : 3668
+Eval Samples     : 408
+Eval Loss        : 0.09832518547773361
+Eval Acc         : 0.8946078431372549
+Forward time     : 4.5200028618176775 min
+Backward time    : 10.384512782096863 min
+Weight memory    : 27478.000128 MB
+Optimizer memory : 53907.390464 MB
+Activation memory: 1569.6292246194112 MB
+Gradient memory  : 26653.6225755289 MB
+Input memory     : 0.0033366543075245363 MB
+Total memory     : 107898.830848 MB
+Peak memory      : 135387.69664 MB
+
+
