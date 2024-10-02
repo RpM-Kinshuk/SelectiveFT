@@ -1,6 +1,7 @@
+import math
 import torch
 import torch.nn as nn
-import math
+from loader.sampling import *
 
 def net_esd_estimator(
         net=None,
@@ -9,19 +10,33 @@ def net_esd_estimator(
         fix_fingers=None,
         xmin_pos=2,
         conv_norm=0.5, 
-        filter_zeros=False):
-    """_summary_
+        filter_zeros=False,
+        use_sliding_window=False,
+        num_row_samples=100,  # Required for sliding window
+        Q_ratio=2.0,  # Required for sliding window
+        step_size=10,  # Sliding window step size for variable ops
+        num_sampling_ops_per_dimension=None  # For fixed number of operations
+    ):
+    """Estimator for Empirical Spectral Density (ESD) and Alpha parameter.
 
     Args:
-        net (_type_, optional): model. Defaults to None.
-        EVALS_THRESH (float, optional): eval threshold to filter near-zero. Defaults to 0.00001.
-        bins (int, optional): _description_. Defaults to 100.
-        fix_fingers (_type_, optional): [None, 'xmin_peak', 'xmin_mid']
-        xmin_pos:   2 = middle of the spectrum selected as xmin,    larger than 2 means select smaller eigs as xmin
+        net (nn.Module): Model to evaluate.
+        EVALS_THRESH (float, optional): Threshold to filter near-zero eigenvalues. Defaults to 0.00001.
+        bins (int, optional): Number of bins for histogram. Defaults to 100.
+        fix_fingers (str, optional): 'xmin_peak' or 'xmin_mid'. Method to select xmin.
+        xmin_pos (int, optional): Position in eigenvalue spectrum to choose xmin. Defaults to 2.
+        conv_norm (float, optional): Normalization for convolutional layers. Defaults to 0.5.
+        filter_zeros (bool, optional): Whether to filter zero eigenvalues. Defaults to False.
+        use_sliding_window (bool, optional): Whether to use sliding window sampling. Defaults to False.
+        num_row_samples (int, optional): Number of rows to sample in sliding window.
+        Q_ratio (float, optional): Ratio of sampled columns to rows in sliding window.
+        step_size (int, optional): Step size for sliding window in variable ops mode.
+        num_sampling_ops_per_dimension (int, optional): Number of sampling operations for fixed ops mode.
 
     Returns:
-        _type_: _description_
+        dict: Results containing spectral norm, alpha values, and other metrics.
     """
+    
     results = {
         'alpha': [],
         'spectral_norm': [],
@@ -33,28 +48,53 @@ def net_esd_estimator(
     }
     print("=================================")
     print(f"fix_fingers: {fix_fingers}, xmin_pos: {xmin_pos}, conv_norm: {conv_norm}, filter_zeros: {filter_zeros}")
+    print(f"use_sliding_window: {use_sliding_window}, num_row_samples: {num_row_samples}, Q_ratio: {Q_ratio}, step_size: {step_size}, num_sampling_ops_per_dimension: {num_sampling_ops_per_dimension}")
     print("=================================")
-    
+
     device = next(net.parameters()).device  # type: ignore
 
-    for name, m in net.named_modules(): # type: ignore
+    for name, m in net.named_modules():  # type: ignore
         if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
             matrix = m.weight.data.clone().to(device)
             if isinstance(m, nn.Conv2d):
                 matrix = torch.flatten(matrix, start_dim=2) * math.sqrt(conv_norm)
                 matrix = matrix.transpose(1, 2).transpose(0, 1)
             matrix = matrix.float()
-            eigs = torch.square(torch.linalg.svdvals(matrix).flatten())
-            eigs = torch.sort(eigs).values
+
+            # Sliding window option for sampling ESD
+            if use_sliding_window:
+                if num_sampling_ops_per_dimension is not None:
+                    eigs = fixed_number_of_sampling_ops(
+                        matrix, 
+                        num_row_samples=num_row_samples, 
+                        Q_ratio=Q_ratio, 
+                        num_sampling_ops_per_dimension=num_sampling_ops_per_dimension, 
+                    )
+                else:
+                    eigs = matrix_size_dependent_number_of_sampling_ops(
+                        matrix, 
+                        num_row_samples=num_row_samples, 
+                        Q_ratio=Q_ratio, 
+                        step_size=step_size,
+                    )
+            else:
+                # Regular full matrix ESD computation
+                eigs = torch.square(torch.linalg.svdvals(matrix).flatten())
+                eigs = torch.sort(eigs).values
+            
+            if not isinstance(eigs, torch.Tensor):
+                eigs = torch.tensor(eigs, device=device)
             spectral_norm = eigs[-1].item()
             fnorm = torch.sum(eigs).item()
-            
+
+            # Filtering based on EVALS_THRESH
             nz_eigs = eigs[eigs > EVALS_THRESH] if filter_zeros else eigs
             if len(nz_eigs) == 0:
                 nz_eigs = eigs
             N = len(nz_eigs)
             log_nz_eigs = torch.log(nz_eigs)
 
+            # Proceed with alpha and D calculations
             if fix_fingers == 'xmin_mid':
                 i = N // xmin_pos
                 xmin = nz_eigs[i]
@@ -91,7 +131,8 @@ def net_esd_estimator(
                 min_D_index = torch.argmin(Ds)
                 final_alpha = alphas[min_D_index]
                 final_D = Ds[min_D_index]
-            
+
+            # Convert to item() for storing results
             final_alpha = final_alpha.item()
             final_D = final_D.item()
             final_alphahat = final_alpha * math.log10(spectral_norm)
@@ -102,6 +143,6 @@ def net_esd_estimator(
             results['alpha'].append(final_alpha)
             results['D'].append(final_D)
             results['longname'].append(name)
-            results['eigs'].append(eigs.cpu().numpy())
+            results['eigs'].append(nz_eigs.cpu().numpy())
 
     return results

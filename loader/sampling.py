@@ -4,7 +4,7 @@ import torch
 ########################################################################################################
 # This function applies sliding window sampling matrix method for approximating random matrix ESD (V1) #
 ########################################################################################################
-def sliding_window_esd_sampler_with_matrix_size_dependent_number_of_sampling_ops(matrix, num_row_samples, Q_ratio, step_size=10):
+def matrix_size_dependent_number_of_sampling_ops(matrix, num_row_samples, Q_ratio, step_size=10):
     rows, cols = matrix.shape
     
     num_col_samples = int(num_row_samples * Q_ratio)
@@ -14,7 +14,7 @@ def sliding_window_esd_sampler_with_matrix_size_dependent_number_of_sampling_ops
     num_col_windows = max(1, (cols - num_col_samples) // step_size + 1)
     
     all_eigs = []
-    print(f"Matrix shape: ({rows}, {cols}) | Number of sliding operations across rows: {num_row_windows} and across columns: {num_col_windows}")
+    # print(f"Matrix shape: ({rows}, {cols}) | Number of sliding operations across rows: {num_row_windows} and across columns: {num_col_windows}")
     
     for i in range(0, num_row_windows):
         for j in range(0, num_col_windows):
@@ -44,7 +44,7 @@ def sliding_window_esd_sampler_with_matrix_size_dependent_number_of_sampling_ops
 ########################################################################################################
 # This function applies sliding window sampling matrix method for approximating random matrix ESD (V2) #
 ########################################################################################################
-def sliding_window_esd_sampler_with_fixed_number_of_sampling_ops(matrix, num_row_samples, Q_ratio, num_sampling_ops_per_dimension):
+def fixed_number_of_sampling_ops(matrix, num_row_samples, Q_ratio, num_sampling_ops_per_dimension):
     rows, cols = matrix.shape
     
     num_col_samples = int(num_row_samples * Q_ratio)
@@ -58,8 +58,8 @@ def sliding_window_esd_sampler_with_fixed_number_of_sampling_ops(matrix, num_row
     num_col_windows = min(num_sampling_ops_per_dimension, max(1, (cols - num_col_samples) // col_step + 1))
     
     all_eigs = []
-    print(f"Matrix shape: ({rows}, {cols}) | Number of sliding operations across rows: {num_row_windows} and across columns: {num_col_windows}")
-    print(f"Row step size: {row_step}, Column step size: {col_step}")
+    # print(f"Matrix shape: ({rows}, {cols}) | Number of sliding operations across rows: {num_row_windows} and across columns: {num_col_windows}")
+    # print(f"Row step size: {row_step}, Column step size: {col_step}")
     
     for i in range(0, num_row_windows):
         for j in range(0, num_col_windows):
