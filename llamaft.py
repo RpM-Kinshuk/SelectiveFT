@@ -145,6 +145,30 @@ class TrainingArguments(transformers.Seq2SeqTrainingArguments):
         default="alpaca",
         metadata={"help": "Name of the prompt template to use."}
     )
+    use_sliding_window: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Whether to use sliding window sampling."}
+    )
+    num_row_samples: Optional[int] = field(
+        default=100,
+        metadata={"help": "Number of rows to sample in sliding window."}
+    )
+    Q_ratio: Optional[float] = field(
+        default=2.0,
+        metadata={"help": "Ratio of sampled columns to rows in sliding window."}
+    )
+    step_size: Optional[int] = field(
+        default=10,
+        metadata={"help": "Step size for sliding window in variable ops mode."}
+    )
+    num_sampling_ops_per_dimension: Optional[int] = field(
+        default=None,
+        metadata={"help": "Number of sampling operations for fixed ops mode."}
+    )
+    filter_zeros: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Whether to filter zero eigenvalues."}
+    )
     train_on_source: Optional[bool] = field(
         default=False,
         metadata={"help": "Whether to train on the input in addition to the target text."}
@@ -317,7 +341,7 @@ def train(args, training_args, model, tokenizer, train_dataloader, eval_dataload
     input_memory, activation_memory, gradient_memory, optimizer_memory = 0, 0, 0, 0
     
     model.train()
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate) # type: ignore
     optimizer.zero_grad()
     train_loss, tr_steps = 0, 0
     
