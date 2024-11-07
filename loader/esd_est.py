@@ -1,7 +1,7 @@
 import math
 import torch
 import torch.nn as nn
-from loader.sampling import *
+from sampling import *
 
 def net_esd_estimator(
         net=None,
@@ -44,7 +44,8 @@ def net_esd_estimator(
         'longname': [],
         'eigs': [],
         'norm': [],
-        'alphahat': []
+        'alphahat': [],
+        'eigs_num': []
     }
     print("=================================")
     print(f"fix_fingers: {fix_fingers}, xmin_pos: {xmin_pos}, conv_norm: {conv_norm}, filter_zeros: {filter_zeros}")
@@ -73,7 +74,7 @@ def net_esd_estimator(
             if not isinstance(eigs, torch.Tensor):
                 eigs = torch.tensor(eigs, device=device)
                 
-            eigs = torch.sort(eigs).values
+            eigs = torch.sort(eigs, descending=False).values
             spectral_norm = eigs[-1].item()
             fnorm = torch.sum(eigs).item()
             
@@ -82,6 +83,9 @@ def net_esd_estimator(
             if len(nz_eigs) == 0:
                 nz_eigs = eigs
             N = len(nz_eigs)
+            if N == 0:
+                nz_eigs = eigs
+                N = len(nz_eigs)
             log_nz_eigs = torch.log(nz_eigs)
             
             # Alpha and D calculations (from before)
