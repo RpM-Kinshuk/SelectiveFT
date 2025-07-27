@@ -1,5 +1,5 @@
-# LlaMAft
-Codebase for LlaMA model fine tuning.
+# SelectiveFT
+Codebase for selective LLM fine tuning.
 
 This project aims to demonstrate the effectiveness of Heavy-Tailed-Self-Regularization theory in accounting for the heavy tailed nature of weight matrices of deep neural networks to produce superior results in both training and fine-tuning pipelines. Our approach involves exploring the intersection of statistical mechanics and deep learning to integrate a novel method of fine-tuning deep neural networks, with Large Language Models (LLMs) being the primary focus.
 
